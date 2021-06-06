@@ -1,0 +1,3 @@
+/home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles/Black_white_FileSystem.dir

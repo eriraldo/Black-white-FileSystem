@@ -1,0 +1,1 @@
+/usr/bin/cc  -Wall -D_FILE_OFFSET_BITS=64 -g CMakeFiles/Black_white_FileSystem.dir/main.c.o -o Black_white_FileSystem  -lfuse 
