@@ -200,9 +200,6 @@ CMAKE_STRIP:FILEPATH=/usr/bin/strip
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
-//The directory containing a CMake configuration file for FUSE.
-FUSE_DIR:PATH=FUSE_DIR-NOTFOUND
-
 //pkg-config executable
 PKG_CONFIG_EXECUTABLE:FILEPATH=/usr/bin/pkg-config
 
@@ -211,9 +208,6 @@ ProcessorCount_cmd_nproc:FILEPATH=/usr/bin/nproc
 
 //Path to a program.
 ProcessorCount_cmd_sysctl:FILEPATH=/usr/sbin/sysctl
-
-//The directory containing a CMake configuration file for fuse.
-fuse_DIR:PATH=fuse_DIR-NOTFOUND
 
 //Path to a library.
 pkgcfg_lib_FUSE_fuse:FILEPATH=/usr/lib/x86_64-linux-gnu/libfuse.so
@@ -391,10 +385,6 @@ FUSE_fuse_INCLUDEDIR:INTERNAL=
 FUSE_fuse_LIBDIR:INTERNAL=
 FUSE_fuse_PREFIX:INTERNAL=
 FUSE_fuse_VERSION:INTERNAL=
-FUSE_libfuse_INCLUDEDIR:INTERNAL=
-FUSE_libfuse_LIBDIR:INTERNAL=
-FUSE_libfuse_PREFIX:INTERNAL=
-FUSE_libfuse_VERSION:INTERNAL=
 //ADVANCED property for variable: PKG_CONFIG_EXECUTABLE
 PKG_CONFIG_EXECUTABLE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: ProcessorCount_cmd_nproc

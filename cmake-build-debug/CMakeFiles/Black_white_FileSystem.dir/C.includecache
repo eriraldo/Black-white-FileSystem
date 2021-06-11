@@ -21,6 +21,8 @@ string.h
 -
 stdlib.h
 -
+errno.h
+-
 
 /usr/include/fuse/fuse.h
 fuse_common.h
