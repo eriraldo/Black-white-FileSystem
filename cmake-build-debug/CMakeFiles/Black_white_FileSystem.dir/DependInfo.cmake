@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/home/erickelizondo/CLionProjects/Black-white-FileSystem/fs.c" "/home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles/Black_white_FileSystem.dir/fs.c.o"
+  "/home/erickelizondo/CLionProjects/Black-white-FileSystem/bwfs.c" "/home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles/Black_white_FileSystem.dir/bwfs.c.o"
   "/home/erickelizondo/CLionProjects/Black-white-FileSystem/main.c" "/home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles/Black_white_FileSystem.dir/main.c.o"
   "/home/erickelizondo/CLionProjects/Black-white-FileSystem/structure_functions.c" "/home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles/Black_white_FileSystem.dir/structure_functions.c.o"
   )

@@ -142,32 +142,32 @@ Black_white_FileSystem/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/build
 .PHONY : Black_white_FileSystem/fast
 
-fs.o: fs.c.o
+bwfs.o: bwfs.c.o
 
-.PHONY : fs.o
+.PHONY : bwfs.o
 
 # target to build an object file
-fs.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/fs.c.o
-.PHONY : fs.c.o
+bwfs.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/bwfs.c.o
+.PHONY : bwfs.c.o
 
-fs.i: fs.c.i
+bwfs.i: bwfs.c.i
 
-.PHONY : fs.i
+.PHONY : bwfs.i
 
 # target to preprocess a source file
-fs.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/fs.c.i
-.PHONY : fs.c.i
+bwfs.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/bwfs.c.i
+.PHONY : bwfs.c.i
 
-fs.s: fs.c.s
+bwfs.s: bwfs.c.s
 
-.PHONY : fs.s
+.PHONY : bwfs.s
 
 # target to generate assembly for a file
-fs.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/fs.c.s
-.PHONY : fs.c.s
+bwfs.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/bwfs.c.s
+.PHONY : bwfs.c.s
 
 main.o: main.c.o
 
@@ -232,9 +232,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... Black_white_FileSystem"
-	@echo "... fs.o"
-	@echo "... fs.i"
-	@echo "... fs.s"
+	@echo "... bwfs.o"
+	@echo "... bwfs.i"
+	@echo "... bwfs.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

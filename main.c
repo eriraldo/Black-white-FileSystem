@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <limits.h>
 
 // ... //
 
@@ -180,5 +181,46 @@ static struct fuse_operations operations = {
 /*
 int main( int argc, char *argv[] )
 {
-    return fuse_main( argc, argv, &operations, NULL );
+    FILE* fd;
+    // Construct arguments to pass to FUSE
+    int fuse_argc;
+    char ** fuse_argv = NULL;
+    fuse_argv = realloc (fuse_argv, 2*sizeof(char*));
+    fuse_argv[0] = argv[0];
+    fuse_argv[1] = argv[optind+2];
+    fuse_argc = 2;
+
+
+    int i;
+    for (i = 0; i < fuse_argc; ++i)
+      printf ("fuse_argv[%d] = %s\n", i, fuse_argv[i]);
+
+    char dir[PATH_MAX];
+    // Path of mosaicfs archive
+    if (argv[optind+1][0] == '/') {
+        // Mount point is absoloute path
+        strncpy(dir, argv[optind+1], sizeof(dir));
+    } else {
+        // Mount point is relative path: convert to absolute
+        char cwd[PATH_MAX];
+        getcwd(cwd, sizeof(cwd));
+        snprintf(dir, sizeof(dir), "%s/%s", cwd, argv[optind+1]);
+    }
+
+    // Test mount point
+    int rv;
+    struct stat s;
+    rv = stat(fuse_argv[1], &s);
+    if (rv == 0) {
+        // Mount point exists: make sure it is a regular and empty file
+        if ( !S_ISREG(s.st_mode) | (s.st_size !=0) ) {
+            fprintf(stderr,"Mount point (%s) is not a regular empty file\n",fuse_argv[1]);
+            exit(-1);
+        }
+    } else {
+        // Mount point does not exist: create it
+        fd = fopen(fuse_argv[1], "w");
+        fclose(fd);
+    }
+    //return fuse_main( argc, argv, &operations, NULL );
 }*/

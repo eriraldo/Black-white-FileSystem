@@ -9,12 +9,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include "structure.h"
-
+char* folder;
 static int do_getattr(const char *path,struct stat *s)
 {
 
 	FILE *fptr;
-	fptr=fopen("Harddisk.dat","ab+");
+	fptr=fopen(folder,"ab+");
 
 	fseek (fptr, 0, SEEK_SET);
 
@@ -70,7 +70,7 @@ static int do_getattr(const char *path,struct stat *s)
 static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *f)
 {
 	FILE *fptr;
-	fptr=fopen("Harddisk.dat","ab+");
+	fptr=fopen(folder,"ab+");
 	fseek (fptr, 0, SEEK_SET);
 
 	printf( "--> Getting The List of Files of %s\n", path );
@@ -300,83 +300,76 @@ static struct fuse_operations operations = {
     .open = do_open,
 };
 
+//argument's structure
+// ./Black_white_FileSystem (mount|create|check) folder/ [mountpoint]
+
+//Example of how to run this program
+// ./Black_white_FileSystem create bwfs/
+// ./Black_white_FileSystem mount bwfs/ /home/erickelizondo/mountpoint
+
 int main( int argc, char *argv[] )
 {
-	/*FILE *fptr;
-	fptr=fopen("Harddisk.dat","ab+");
-	//fseek (fptr, 0, SEEK_SET);
-
-	if(fptr==NULL)
-    {
-        fprintf(stderr, "\nError opend file\n");
-        exit (1);
+    char* newArgv[3] = {argv[0], "-f", ""};
+    char mountpoint[100] ={""};
+    if(argc > 3) {
+        strcpy(mountpoint,argv[3]);
+        newArgv[2] = mountpoint;
     }
-    else
-    {
-    	fseek (fptr, 0, SEEK_END);
-        int size = ftell(fptr);
-    	if(size==0)
-    	{
-			intialize_databmap(HDD.dbmap);
-			intialize_inodebmap(HDD.ibmap);
-			intialize_nodebmap(HDD.nbmap);
-			create_tree();
-			printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
-			printf("\tFILE SYSTEM MOUNTED\n");
-		}
-		else
-		{ fseek (fptr, 0, SEEK_SET);
-			while(fread(&HDD, sizeof(HARDDISK), 1, fptr));
-			printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
-			printf("\tFILE SYSTEM RE-MOUNTED\n");
-		}
-	}
-	fclose(fptr);
+    char* modo = argv[1];
+    char parseFolder[100] = {""};
+    strcpy(parseFolder,argv[2]);
+    folder = parseFolder;
+    struct stat st = {0};
+    if(stat(folder, &st ) == -1){
+        mkdir(folder, 0700);
+    }
+    char* archivo = "Harddisk.dat";
+    strcat(folder,archivo);
 
-	printf("I-node bitmap:    ");
-	for(int i=0;i<20;i++){
-		printf("%d ",HDD.ibmap[i].check);
-	}
-	printf("\nData-node bitmap: ");
-	for(int i=0;i<20;i++){
-		printf("%d ",HDD.dbmap[i].check);
-	}
-	printf("\nNode bitmap:      ");
-	for(int i=0;i<20;i++){
-		printf("%d ",HDD.nbmap[i].check);
-	}
-	printf("\n");
-	int a;
-	scanf("%d",&a);*/
+
     FILE *fptr;
-    fptr=fopen("Harddisk.dat","ab+");
 
+    fptr=fopen(folder,"ab+");
+    char * debug = folder;
     fseek (fptr, 0, SEEK_END);
+
     int size = ftell(fptr);
-    if(size==0)
-    {
+
+    if(strcmp(modo, "mount") == 0){
+        struct stat st2 = {0};
+        char* debug2 = argv[3];
+        if(stat(argv[3], &st2) == -1){
+            mkdir(argv[3], 0700);
+        }
+        if(size==0){
+            intialize_databmap(HDD.dbmap);
+            intialize_inodebmap(HDD.ibmap);
+            intialize_nodebmap(HDD.nbmap);
+            create_tree();
+            printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
+            printf("\tFILE SYSTEM MOUNTED\n");
+        }
+        else{
+            fseek (fptr, 0, SEEK_SET);
+            while(fread(&HDD, sizeof(HARDDISK), 1, fptr));
+            HARDDISK debug = HDD;
+            argv[1] = "-f";
+            argv[2] = "-s";
+            printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
+            printf("\tFILE SYSTEM RE-MOUNTED\n");
+        }
+        fillData();
+    }else if(strcmp(modo, "create") == 0){
         intialize_databmap(HDD.dbmap);
         intialize_inodebmap(HDD.ibmap);
         intialize_nodebmap(HDD.nbmap);
         create_tree();
-        printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
-        printf("\tFILE SYSTEM MOUNTED\n");
-    }
-    else
-    { fseek (fptr, 0, SEEK_SET);
-        while(fread(&HDD, sizeof(HARDDISK), 1, fptr));
-        HARDDISK debug = HDD;
-
-        printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
-        printf("\tFILE SYSTEM RE-MOUNTED\n");
+        fwrite(&HDD, sizeof(HARDDISK), 1, fptr);
+        exit(0);
+    }else{
+        printf("Checkeo de consistencia\n");
+        exit(0);
     }
     fclose(fptr);
-    fillData();
-
-    /*intialize_databmap(HDD.dbmap);
-    intialize_inodebmap(HDD.ibmap);
-    intialize_nodebmap(HDD.nbmap);
-    create_tree();*/
-
 	return fuse_main( argc, argv, &operations, NULL );
 }
