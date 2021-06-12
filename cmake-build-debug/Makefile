@@ -142,6 +142,33 @@ Black_white_FileSystem/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/build
 .PHONY : Black_white_FileSystem/fast
 
+fs.o: fs.c.o
+
+.PHONY : fs.o
+
+# target to build an object file
+fs.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/fs.c.o
+.PHONY : fs.c.o
+
+fs.i: fs.c.i
+
+.PHONY : fs.i
+
+# target to preprocess a source file
+fs.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/fs.c.i
+.PHONY : fs.c.i
+
+fs.s: fs.c.s
+
+.PHONY : fs.s
+
+# target to generate assembly for a file
+fs.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/fs.c.s
+.PHONY : fs.c.s
+
 main.o: main.c.o
 
 .PHONY : main.o
@@ -169,6 +196,33 @@ main.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/main.c.s
 .PHONY : main.c.s
 
+structure_functions.o: structure_functions.c.o
+
+.PHONY : structure_functions.o
+
+# target to build an object file
+structure_functions.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/structure_functions.c.o
+.PHONY : structure_functions.c.o
+
+structure_functions.i: structure_functions.c.i
+
+.PHONY : structure_functions.i
+
+# target to preprocess a source file
+structure_functions.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/structure_functions.c.i
+.PHONY : structure_functions.c.i
+
+structure_functions.s: structure_functions.c.s
+
+.PHONY : structure_functions.s
+
+# target to generate assembly for a file
+structure_functions.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/structure_functions.c.s
+.PHONY : structure_functions.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -178,9 +232,15 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... Black_white_FileSystem"
+	@echo "... fs.o"
+	@echo "... fs.i"
+	@echo "... fs.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... structure_functions.o"
+	@echo "... structure_functions.i"
+	@echo "... structure_functions.s"
 .PHONY : help
 
 

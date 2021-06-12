@@ -177,8 +177,8 @@ static struct fuse_operations operations = {
         .mknod		= do_mknod,
         .write		= do_write,
 };
-
+/*
 int main( int argc, char *argv[] )
 {
     return fuse_main( argc, argv, &operations, NULL );
-}
+}*/

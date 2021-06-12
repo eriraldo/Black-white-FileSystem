@@ -93,12 +93,12 @@ clean: CMakeFiles/Black_white_FileSystem.dir/clean
 CMakeFiles/Black_white_FileSystem.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles --progress-num=1,2 "Built target Black_white_FileSystem"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles --progress-num=1,2,3,4 "Built target Black_white_FileSystem"
 .PHONY : CMakeFiles/Black_white_FileSystem.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/Black_white_FileSystem.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Black_white_FileSystem.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug/CMakeFiles 0
 .PHONY : CMakeFiles/Black_white_FileSystem.dir/rule

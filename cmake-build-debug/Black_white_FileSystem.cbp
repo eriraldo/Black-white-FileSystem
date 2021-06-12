@@ -80,7 +80,16 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/home/erickelizondo/CLionProjects/Black-white-FileSystem/fs.c">
+			<Option target="Black_white_FileSystem"/>
+		</Unit>
 		<Unit filename="/home/erickelizondo/CLionProjects/Black-white-FileSystem/main.c">
+			<Option target="Black_white_FileSystem"/>
+		</Unit>
+		<Unit filename="/home/erickelizondo/CLionProjects/Black-white-FileSystem/structure.h">
+			<Option target="Black_white_FileSystem"/>
+		</Unit>
+		<Unit filename="/home/erickelizondo/CLionProjects/Black-white-FileSystem/structure_functions.c">
 			<Option target="Black_white_FileSystem"/>
 		</Unit>
 		<Unit filename="/home/erickelizondo/CLionProjects/Black-white-FileSystem/CMakeLists.txt">
