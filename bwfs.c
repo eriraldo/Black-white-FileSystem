@@ -14,7 +14,7 @@ static int do_getattr(const char *path,struct stat *s)
 {
 
 	FILE *fptr;
-	fptr=fopen(folder,"ab+");
+	fptr=fopen(folder,"wb");
 
 	fseek (fptr, 0, SEEK_SET);
 
@@ -70,7 +70,7 @@ static int do_getattr(const char *path,struct stat *s)
 static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *f)
 {
 	FILE *fptr;
-	fptr=fopen(folder,"ab+");
+	fptr=fopen(folder,"wb");
 	fseek (fptr, 0, SEEK_SET);
 
 	printf( "--> Getting The List of Files of %s\n", path );
@@ -353,12 +353,13 @@ int main( int argc, char *argv[] )
             fseek (fptr, 0, SEEK_SET);
             while(fread(&HDD, sizeof(HARDDISK), 1, fptr));
             HARDDISK debug = HDD;
-            argv[1] = "-f";
-            argv[2] = "-s";
             printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
             printf("\tFILE SYSTEM RE-MOUNTED\n");
+            fillData();
         }
-        fillData();
+        argv[1] = "-f";
+        argv[2] = "-s";
+
     }else if(strcmp(modo, "create") == 0){
         intialize_databmap(HDD.dbmap);
         intialize_inodebmap(HDD.ibmap);
@@ -371,5 +372,8 @@ int main( int argc, char *argv[] )
         exit(0);
     }
     fclose(fptr);
+    for(int i = 0; i<argc; i++){
+        printf("%s\n", argv[i]);
+    }
 	return fuse_main( argc, argv, &operations, NULL );
 }
