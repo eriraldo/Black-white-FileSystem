@@ -2,8 +2,8 @@
 #include<stdlib.h>
 #include<string.h>
 #include"structure.h"
-
-void print_tree(int rootno)
+HARDDISK HDD;
+void imprimirArbol(int rootno)
 {
 	if(rootno==-1)
 		printf("#\n");
@@ -11,19 +11,19 @@ void print_tree(int rootno)
 	int ptr=HDD.node[rootno].headchildno;
 	while(ptr!=-1)
 	{
-		print_tree(ptr);
+		imprimirArbol(ptr);
 		ptr=HDD.node[ptr].nextno;
 	}
 }
 
-void create_tree()
+void crearArbol()
 {
-	HDD.t.rootno=create_root();
+	HDD.t.rootno=crearRaiz();
 }
 
-int create_root()
+int crearRaiz()
 {
-	int index=find_empty_node(HDD.nbmap);
+	int index=buscarNodoVacio(HDD.nbmap);
 	if(index==-1)
 	{
 		return -1;
@@ -37,7 +37,7 @@ int create_root()
 	return index;
 }
 
-int search_node(const char *path,int rootno)
+int buscarNodo(const char *path,int rootno)
 {
 	if(rootno==-1)
 		return -1;
@@ -49,7 +49,7 @@ int search_node(const char *path,int rootno)
 		int ans;
  		while(temp!=-1)
 		{
-        	ans=search_node(path,temp);
+        	ans=buscarNodo(path,temp);
 			if(ans!=-1)
 				return ans;
 			temp=HDD.node[temp].nextno;
@@ -58,32 +58,32 @@ int search_node(const char *path,int rootno)
 	}
 }
 
-int make_node(const char *path,int rootno,struct stat *s,file_type ftype)
+int hacerNodo(const char *path,int rootno,struct stat *s,file_type ftype)
 {
-	int inode_no=make_inode(s,ftype);
+	int inode_no=hacerInodo(s,ftype);
 	if(inode_no == -1)
 	{
 		return -1;
 	}
-	else if(search_node(path,rootno)!=-1)
+	else if(buscarNodo(path,rootno)!=-1)
 	{
-		printf("File already exists\n");
+		printf("El archivo ya existe\n");
 		return -1;
 	}
 	else
 	{
-		int index=find_empty_node(HDD.nbmap);
+		int index=buscarNodoVacio(HDD.nbmap);
 		int j;
 		char *d,*name;
 		d=(char*)calloc(strlen(path),sizeof(char));
 		name=(char*)calloc(strlen(path),sizeof(char));
-		parse_path(path,d,name);
+		parsearRuta(path,d,name);
 
-		int par=search_node(d,rootno);
+		int par=buscarNodo(d,rootno);
 
 		if(par==-1)
 		{
-			printf("INVALID PATH\n");
+			printf("RUTA INVALIDA\n");
 			return -1;
 		}
 
@@ -100,7 +100,7 @@ int make_node(const char *path,int rootno,struct stat *s,file_type ftype)
 		}
 		else
 		{
-			int block_no=make_blk(inode_no);
+			int block_no=hacerBloque(inode_no);
 			HDD.inode[HDD.node[index].ino].bp[HDD.inode[HDD.node[index].ino].no_blocks]=&HDD.block[block_no];
 			HDD.inode[inode_no].no_blocks++;
 		}
@@ -131,17 +131,17 @@ int make_node(const char *path,int rootno,struct stat *s,file_type ftype)
 	}
 }
 
-int rem_node(const char *path,int rootno)
+int eliminarNodo(const char *path,int rootno)
 {
-	int rn=search_node(path,rootno);
+	int rn=buscarNodo(path,rootno);
 	if(rn==-1)
 	{
-		printf("FILE NOT FOUND\n");
+		printf("ARCHIVO NO ENCONTRADO\n");
 		return 0;
 	}
 	else if(HDD.node[rn].no_children>0)
 	{
-		printf("Cannot delete non-empty directory\n");
+		printf("No se puede eliminar un directorio no vacio\n");
 		return 0;
 	}
 	else
@@ -178,7 +178,7 @@ int rem_node(const char *path,int rootno)
 		return 1;
 	}
 }
-void parse_path(const char* path,char *directory,char *name)
+void parsearRuta(const char* path,char *directory,char *name)
 {
    int length=strlen(path);
    int i=length-1,j=0;
@@ -199,7 +199,7 @@ void parse_path(const char* path,char *directory,char *name)
    	name[i++]=path[j++];
 }
 
-void intialize_nodebmap(NBMAP *n)
+void iniciarNodoBmap(NBMAP *n)
 {
 	for(int i=0;i<NO_BLKS;i++)
 	{
@@ -208,7 +208,7 @@ void intialize_nodebmap(NBMAP *n)
 	}
 }
 
-void intialize_inodebmap(IBMAP *ibp)
+void iniciarINodoBmap(IBMAP *ibp)
 {
 	for(int i=0;i<NO_BLKS;i++)
 	{
@@ -217,7 +217,7 @@ void intialize_inodebmap(IBMAP *ibp)
 	}
 }
 
-void intialize_databmap(DBMAP *dbp)
+void iniciarDataBmap(DBMAP *dbp)
 {
 	for(int i=0;i<NO_BLKS;i++)
 	{
@@ -226,7 +226,7 @@ void intialize_databmap(DBMAP *dbp)
 	}
 }
 
-int find_empty_node(NBMAP *n)
+int buscarNodoVacio(NBMAP *n)
 {
 	for(int i=0;i<NO_BLKS;i++)
 		if(n[i].check==0)
@@ -237,7 +237,7 @@ int find_empty_node(NBMAP *n)
 	return -1;
 }
 
-int find_empty_inode(IBMAP *ibp)
+int buscarINodoVacio(IBMAP *ibp)
 {
 	for(int i=0;i<NO_BLKS;i++)
 		if(ibp[i].check==0)
@@ -248,7 +248,7 @@ int find_empty_inode(IBMAP *ibp)
 	return -1;
 }
 
-int find_empty_block(DBMAP *dbp)
+int buscarBloqueVacio(DBMAP *dbp)
 {
 	for(int i=0;i<NO_BLKS;i++)
 		if(dbp[i].check==0)
@@ -259,12 +259,12 @@ int find_empty_block(DBMAP *dbp)
 	return -1;
 }
 
-int make_blk(int inode_no)
+int hacerBloque(int inode_no)
 {
-	int B_index=find_empty_block(HDD.dbmap);
+	int B_index=buscarBloqueVacio(HDD.dbmap);
 	if(B_index==-1)
 	{
-		printf("HARD DISK FULL\n");
+		printf("DISCO DURO LLENO\n");
 		return -1;
 	}
 	HDD.block[B_index].blk_no=B_index;
@@ -275,12 +275,12 @@ int make_blk(int inode_no)
 	return B_index;
 }
 
-int make_inode(struct stat *s,file_type ftype)
+int hacerInodo(struct stat *s,file_type ftype)
 {
-	int I_index=find_empty_inode(HDD.ibmap);
+	int I_index=buscarINodoVacio(HDD.ibmap);
 	if(I_index==-1)
 	{
-		printf("No empty INODES\n");
+		printf("No hay INodos vacios\n");
 		return -1;
 	}
 	HDD.inode[I_index].ino=I_index;
@@ -294,7 +294,7 @@ int make_inode(struct stat *s,file_type ftype)
 	return I_index;
 }
 
-void cleanINodeData(){
+void limpiarInfoINodo(){
     for(int i = 0; i<NO_BLKS; i++){
         for(int j=0; j<BLK_LIMIT; j++){
             HDD.inode[i].bp[j] = NULL;
@@ -302,9 +302,9 @@ void cleanINodeData(){
     }
 }
 
-void fillData(){
+void llenarData(){
     HARDDISK debug = HDD;
-    cleanINodeData();
+    limpiarInfoINodo();
     //HDD.inode[1].bp[0] = &HDD.block[0];
     HARDDISK debug2 = HDD;
     int initialBlock = 0;

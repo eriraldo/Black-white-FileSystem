@@ -72,25 +72,25 @@ typedef struct node_bitmap
 }NBMAP;
 
 //TREE FUCNTIONS
-void create_tree();
-int create_root();
-int make_node(const char *path,int rootno,struct stat *s,file_type ftype);
-int search_node(const char *path,int rootno);
-int rem_node(const char *path,int rootno);
-void parse_path(const char* path,char *directory,char *name);
-void print_tree(int rootno);
-void fillData();
+void crearArbol();
+int crearRaiz();
+int hacerNodo(const char *path,int rootno,struct stat *s,file_type ftype);
+int buscarNodo(const char *path,int rootno);
+int eliminarNodo(const char *path,int rootno);
+void parsearRuta(const char* path,char *directory,char *name);
+void imprimirArbol(int rootno);
+void llenarData();
 
 //BLOCK FUCNTIONS
-int make_blk(int inode_no);
-int make_inode(struct stat *s,file_type ftype);
-void intialize_inodebmap(struct inode_bitmap *ibp);
-void intialize_databmap(struct data_bitmap *dbp);
-void intialize_nodebmap(NBMAP *nbmap);
-int find_empty_inode(struct inode_bitmap *ibp);
-int find_empty_block(struct data_bitmap *dbp);
-int find_empty_node(NBMAP *nbmap);
-void cleanINodeData();
+int hacerBloque(int inode_no);
+int hacerInodo(struct stat *s,file_type ftype);
+void iniciarINodoBmap(struct inode_bitmap *ibp);
+void iniciarDataBmap(struct data_bitmap *dbp);
+void iniciarNodoBmap(NBMAP *nbmap);
+int buscarINodoVacio(struct inode_bitmap *ibp);
+int buscarBloqueVacio(struct data_bitmap *dbp);
+int buscarNodoVacio(NBMAP *nbmap);
+void limpiarInfoINodo();
 
 //GLOBAL VARIABLES STRUCTURE
 typedef struct hardisk
@@ -104,4 +104,4 @@ typedef struct hardisk
 	TREE t;
 }HARDDISK;
 
-HARDDISK HDD;
+

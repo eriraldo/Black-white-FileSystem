@@ -13,6 +13,7 @@
 #include "bmpGen.h"
 char* folder;
 char* almacenamiento;
+extern HARDDISK HDD;
 static int do_getattr(const char *path,struct stat *s)
 {
     FILE *fptr;
@@ -21,17 +22,17 @@ static int do_getattr(const char *path,struct stat *s)
 	if(fptr != NULL)
 	    fseek (fptr, 0, SEEK_SET);
 
-	printf( "[getattr] Called\n" );
-	printf("\n\tTREE:\n");
-	print_tree(HDD.t.rootno);
-	printf( "\n\tAttributes of %s requested\n", path );
+	printf( "[getattr] Llamado\n" );
+	printf("\n\tARBOL:\n");
+	imprimirArbol(HDD.t.rootno);
+	printf( "\n\tAtributos de %s solicitados\n", path );
 
 
 	if(strcmp(path,"/")==0)
 	{
 		if(HDD.node[HDD.t.rootno].ino == -1)
 		{
-			int a=make_inode(s,TYPE_DIRECTORY);
+			int a=hacerInodo(s,TYPE_DIRECTORY);
 			HDD.node[HDD.t.rootno].ino=a;
 			s->st_ino=a;
 		}
@@ -48,10 +49,10 @@ static int do_getattr(const char *path,struct stat *s)
 	}
 	else if(strcmp(path,"/.Trash")!=0 && strcmp(path,"/.Trash-1000")!=0 && strcmp(path,"/.xdg-volume-info")!=0 && strcmp(path,"/autorun.inf")!=0)
 	{
-		int temp=search_node(path,HDD.t.rootno);
+		int temp=buscarNodo(path,HDD.t.rootno);
 		if(temp==-1)
 		{
-			printf("PATH DOES NOT EXIST\n");
+			printf("LA RUTA NO EXISTE\n");
 			return -ENOENT;
 		}
 		s->st_ino=HDD.node[temp].ino;
@@ -114,16 +115,16 @@ static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off
 	fptr=fopen(folder,"wb");
 	fseek (fptr, 0, SEEK_SET);*/
     HARDDISK debug32 = HDD;
-	printf( "--> Getting The List of Files of %s\n", path );
+	printf( "--> Tomando la lista de archivos de la ruta %s\n", path ); //
 
 	filler( buffer, ".", NULL, 0 );
 	filler( buffer, "..", NULL, 0 );
 	printf("%s",HDD.node[HDD.t.rootno+1].path_name);
-	int temp=search_node(path,HDD.t.rootno);
+	int temp=buscarNodo(path,HDD.t.rootno);
 
 	if(temp==-1)
 	{
-		printf("INVALID PATH\n");
+		printf("RUTA INVALIDA\n");
 		return -ENOENT;
 	}
 
@@ -136,7 +137,7 @@ static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off
 			char *d,*name;
 			d=(char*)calloc(strlen(path),sizeof(char));
 			name=(char*)calloc(strlen(path),sizeof(char));
-			parse_path(HDD.node[ptr].path_name,d,name);
+			parsearRuta(HDD.node[ptr].path_name,d,name);
 			filler( buffer, name, NULL, 0 );
 			ptr=HDD.node[ptr].nextno;
 		}
@@ -149,7 +150,7 @@ static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off
 
 static int do_mkdir(const char *path, mode_t mode)
 {
-	printf( "--> Trying to mkdir %s\n", path);
+	printf( "--> Intentado de crear el directorio %s\n", path);
 
 
 	struct stat *s=(struct stat*)malloc(sizeof(struct stat));
@@ -158,16 +159,16 @@ static int do_mkdir(const char *path, mode_t mode)
 	s->st_atime=s->st_mtime=time(NULL);
 	s->st_mode=S_IFDIR | 0775;
 	s->st_nlink=1;
-	int temp=make_node(path,HDD.t.rootno,s,TYPE_DIRECTORY);
+	int temp=hacerNodo(path,HDD.t.rootno,s,TYPE_DIRECTORY);
 
 	return 0;
 }
 
 static int do_rmdir(const char * path)
 {
-	printf( "--> Trying to rmdir %s\n", path);
+	printf( "--> Intentando de remover el directorio %s\n", path);
 
-	int ans=rem_node(path,HDD.t.rootno);
+	int ans=eliminarNodo(path,HDD.t.rootno);
 	if(ans==0)
 	{
 		return -ENOTEMPTY;
@@ -177,7 +178,7 @@ static int do_rmdir(const char * path)
 
 static int do_create (const char *path, mode_t mode, struct fuse_file_info *f)
 {
-	printf( "--> Trying to create %s\n", path);
+	printf( "--> Intentando de crear %s\n", path);
 
 	struct stat *s=(struct stat*)malloc(sizeof(struct stat));
 	s->st_gid=getgid();
@@ -185,13 +186,13 @@ static int do_create (const char *path, mode_t mode, struct fuse_file_info *f)
 	s->st_atime=s->st_mtime=time(NULL);
 	s->st_mode=S_IFREG | 0644;
 	s->st_nlink=1;
-	int temp=make_node(path,HDD.t.rootno,s,TYPE_ORDINARY);
+	int temp=hacerNodo(path,HDD.t.rootno,s,TYPE_ORDINARY);
 	return 0;
 }
 
 static int do_mknod (const char *path, mode_t mode, dev_t dev)
 {
-	printf( "--> Trying to create %s\n", path);
+	printf( "--> Intentando de crear  %s\n", path);
 
 	struct stat *s=(struct stat*)malloc(sizeof(struct stat));
 	s->st_gid=getgid();
@@ -199,15 +200,15 @@ static int do_mknod (const char *path, mode_t mode, dev_t dev)
 	s->st_atime=s->st_mtime=time(NULL);
 	s->st_mode=S_IFREG | 0644;
 	s->st_nlink=1;
-	int temp=make_node(path,HDD.t.rootno,s,TYPE_ORDINARY);
+	int temp=hacerNodo(path,HDD.t.rootno,s,TYPE_ORDINARY);
 	return 0;
 }
 
 static int do_unlink(const char *path)
 {
-	printf( "--> Trying to unlink %s\n", path);
+	printf( "--> Intentando de desligar  %s\n", path);
 
-	int ans=rem_node(path,HDD.t.rootno);
+	int ans=eliminarNodo(path,HDD.t.rootno);
 	if(ans==0)
 	{
 		return -ENOTEMPTY;
@@ -217,13 +218,13 @@ static int do_unlink(const char *path)
 
 static int do_read(const char *path, char *buffer, size_t size,off_t offset, struct fuse_file_info *fi)
 {
-	printf( "--> Trying to read %s, %lu, %lu\n", path, offset, size );
+	printf( "--> Intentado de leer %s, %lu, %lu\n", path, offset, size );
 
-	int temp = search_node(path,HDD.t.rootno);
+	int temp = buscarNodo(path,HDD.t.rootno);
 	size=HDD.inode[HDD.node[temp].ino].filesize;
 	if(temp == -1)
 	{
-		printf("INVALID PATH\n");
+		printf("RUTA INVALIDA\n");
 		return -ENOENT;
 	}
 
@@ -243,13 +244,13 @@ static int do_read(const char *path, char *buffer, size_t size,off_t offset, str
 
 static int do_write(const char *path, const char *buffer, size_t size, off_t offset,struct fuse_file_info *f)
 {
-	printf( "--> Trying to write %s, %lu, %lu\n", path, offset, size );
+	printf( "--> Intentando de escribir %s, %lu, %lu\n", path, offset, size );
 
-	int temp = search_node(path,HDD.t.rootno);offset=0;
+	int temp = buscarNodo(path,HDD.t.rootno);offset=0;
 
 	if(temp == -1)
 	{
-		printf("INVALID PATH\n");
+		printf("RUTA INVALIDA\n");
 		return -ENOENT;
 	}
 
@@ -274,7 +275,7 @@ static int do_write(const char *path, const char *buffer, size_t size, off_t off
 		(HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->end += size1;
 
 		int inode_no=HDD.node[temp].ino;
-		int block_no=make_blk(inode_no);
+		int block_no=hacerBloque(inode_no);
 		HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks]=&HDD.block[block_no];
 		HDD.inode[inode_no].no_blocks++;
 
@@ -302,13 +303,13 @@ static int do_write(const char *path, const char *buffer, size_t size, off_t off
 
 static int do_chmod(const char *path, mode_t mode)
 {
-	printf( "--> Trying to change permissions %s\n", path);
+	printf( "--> Intentando de cambiar permisos %s\n", path); //
 
-	int temp = search_node(path,HDD.t.rootno);
+	int temp = buscarNodo(path,HDD.t.rootno);
 
 	if(temp == -1)
 	{
-		printf("INVALID PATH\n");
+		printf("RUTA INVALIDA\n");
 		return -ENOENT;
 	}
 	HDD.inode[HDD.node[temp].ino].mode=mode;
@@ -317,16 +318,19 @@ static int do_chmod(const char *path, mode_t mode)
 
 static int do_open(const char *path, struct fuse_file_info *fi)
 {
-	printf( "--> Trying to open %s\n", path);
+	printf( "--> Intentando de abrir %s\n", path);
 
-	int temp = search_node(path,HDD.t.rootno);
+	int temp = buscarNodo(path,HDD.t.rootno);
 
 	if(temp==-1)
 		return -ENOENT;
 	else if(strcmp(path,"/")!=0)
 		return 0;
-}
+};
 
+void do_rename(char* from,char* to){
+
+};
 static struct fuse_operations operations = {
     .getattr = do_getattr,
     .readdir = do_readdir,	//ls function
@@ -339,7 +343,10 @@ static struct fuse_operations operations = {
     .write = do_write,		//WRITING FILE
     .chmod = do_chmod,		//CHANGING PERMISSION
     .open = do_open,
+    .rename = do_rename,
 };
+
+
 
 //argument's structure
 // ./Black_white_FileSystem (mount|create|check) folder/ [mountpoint]
@@ -388,21 +395,21 @@ int main( int argc, char *argv[] )
             mkdir(argv[3], 0700);
         }
         if(size==0){
-            intialize_databmap(HDD.dbmap);
-            intialize_inodebmap(HDD.ibmap);
-            intialize_nodebmap(HDD.nbmap);
-            create_tree();
+            iniciarDataBmap(HDD.dbmap);
+            iniciarINodoBmap(HDD.ibmap);
+            iniciarNodoBmap(HDD.nbmap);
+            crearArbol();
             printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
-            printf("\tFILE SYSTEM MOUNTED\n");
+            printf("\tSISTEMA DE ARCHIVOS MONTADO\n");
         }
         else{
             fseek (fptr, 0, SEEK_SET);
             while(fread(&HDD, sizeof(HARDDISK), 1, fptr));
             HARDDISK debug32 = HDD;
             printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
-            printf("\tFILE SYSTEM RE-MOUNTED\n");
+            printf("\tSISTEMA DE ARCHIVOS MONTADO NUEVAMENTE\n");
 
-            fillData();
+            llenarData();
 
         }
         argv[1] = "-f";
@@ -413,10 +420,10 @@ int main( int argc, char *argv[] )
         fptr=fopen(folder,"wb");
         fseek (fptr, 0, SEEK_END);
         size = ftell(fptr);
-        intialize_databmap(HDD.dbmap);
-        intialize_inodebmap(HDD.ibmap);
-        intialize_nodebmap(HDD.nbmap);
-        create_tree();
+        iniciarDataBmap(HDD.dbmap);
+        iniciarINodoBmap(HDD.ibmap);
+        iniciarNodoBmap(HDD.nbmap);
+        crearArbol();
         fwrite(&HDD, sizeof(HARDDISK), 1, fptr);
         exit(0);
     }else{
