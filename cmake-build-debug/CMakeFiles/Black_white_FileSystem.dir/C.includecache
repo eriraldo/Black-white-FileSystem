@@ -6,6 +6,18 @@
 
 #IncludeRegexTransform: 
 
+/home/erickelizondo/CLionProjects/Black-white-FileSystem/bmpGen.h
+stdio.h
+-
+stdint.h
+-
+string.h
+-
+malloc.h
+-
+stdbool.h
+-
+
 /home/erickelizondo/CLionProjects/Black-white-FileSystem/bwfs.c
 errno.h
 -
@@ -25,8 +37,12 @@ string.h
 -
 stdlib.h
 -
+stdbool.h
+-
 structure.h
 /home/erickelizondo/CLionProjects/Black-white-FileSystem/structure.h
+bmpGen.h
+/home/erickelizondo/CLionProjects/Black-white-FileSystem/bmpGen.h
 
 /home/erickelizondo/CLionProjects/Black-white-FileSystem/structure.h
 errno.h

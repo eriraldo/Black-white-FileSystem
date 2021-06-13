@@ -1,4 +1,13 @@
 /opt/clion-2021.1.1/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/erickelizondo/CLionProjects/Black-white-FileSystem
+-- The C compiler identification is GNU 9.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Found PkgConfig: /usr/bin/pkg-config (found version "0.29.1") 
+-- Checking for module 'fuse'
+--   Found fuse, version 2.9.9
 -- Configuring done
 -- Generating done
 -- Build files have been written to: /home/erickelizondo/CLionProjects/Black-white-FileSystem/cmake-build-debug

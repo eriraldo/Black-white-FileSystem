@@ -80,6 +80,12 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/home/erickelizondo/CLionProjects/Black-white-FileSystem/bmpGen.c">
+			<Option target="Black_white_FileSystem"/>
+		</Unit>
+		<Unit filename="/home/erickelizondo/CLionProjects/Black-white-FileSystem/bmpGen.h">
+			<Option target="Black_white_FileSystem"/>
+		</Unit>
 		<Unit filename="/home/erickelizondo/CLionProjects/Black-white-FileSystem/bwfs.c">
 			<Option target="Black_white_FileSystem"/>
 		</Unit>

@@ -8,15 +8,19 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "structure.h"
+#include "bmpGen.h"
 char* folder;
+char* almacenamiento;
 static int do_getattr(const char *path,struct stat *s)
 {
 
 	FILE *fptr;
 	fptr=fopen(folder,"wb");
-
-	fseek (fptr, 0, SEEK_SET);
+	char * test = folder;
+	if(fptr != NULL)
+	    fseek (fptr, 0, SEEK_SET);
 
 	printf( "[getattr] Called\n" );
 	printf("\n\tTREE:\n");
@@ -65,6 +69,44 @@ static int do_getattr(const char *path,struct stat *s)
 		fclose(fptr);
 		return 0;
 	}
+}
+
+void printFile(){
+
+    FILE *ptr;
+
+    ptr = fopen(folder,"rb");  // r for read, b for binary
+    fseek (ptr, 0, SEEK_END);
+    int size = ftell(ptr);
+    unsigned char buffer[size];
+    fread(buffer,sizeof(buffer),1,ptr); // read 10 bytes to our buffer
+
+    printf("IMPRIMIENDO: %d  BYTES\n", size);
+    bool test = false;
+    for(int i = 0; i<size; i++)
+        if(i!=0 && i%30 == 0) {
+            printf("\n");
+        }else{
+            printf("%u ", buffer[i]); // prints a series of bytes
+            test = !test;
+
+        }
+
+
+
+}
+
+void test(){
+    FILE *ptr;
+    ptr = fopen(folder,"rb");  // r for read, b for binary
+    fseek (ptr, 0, SEEK_END);
+    int size = ftell(ptr);
+    ptr = fopen(folder,"rb");  // r for read, b for binary
+    FILE *fp;
+    fp = fopen("bwfs/test.bmp","ab+");
+    fwrite(ptr, size, 1, fp);
+    fclose(fp);
+    fclose(ptr);
 }
 
 static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *f)
@@ -318,26 +360,29 @@ int main( int argc, char *argv[] )
     char* modo = argv[1];
     char parseFolder[100] = {""};
     strcpy(parseFolder,argv[2]);
+    char parseBMP[100] = {""};
+    strcpy(parseBMP,argv[2]);
     folder = parseFolder;
+    almacenamiento = parseBMP;
     struct stat st = {0};
     if(stat(folder, &st ) == -1){
         mkdir(folder, 0700);
     }
     char* archivo = "Harddisk.dat";
     strcat(folder,archivo);
+    char* archivoBMP = "almacenamiento.bmp";
+    strcat(almacenamiento,archivoBMP);
 
 
     FILE *fptr;
 
     fptr=fopen(folder,"ab+");
-    char * debug = folder;
     fseek (fptr, 0, SEEK_END);
 
     int size = ftell(fptr);
 
     if(strcmp(modo, "mount") == 0){
         struct stat st2 = {0};
-        char* debug2 = argv[3];
         if(stat(argv[3], &st2) == -1){
             mkdir(argv[3], 0700);
         }
@@ -352,13 +397,16 @@ int main( int argc, char *argv[] )
         else{
             fseek (fptr, 0, SEEK_SET);
             while(fread(&HDD, sizeof(HARDDISK), 1, fptr));
-            HARDDISK debug = HDD;
+
             printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
             printf("\tFILE SYSTEM RE-MOUNTED\n");
+
             fillData();
+
         }
         argv[1] = "-f";
         argv[2] = "-s";
+
 
     }else if(strcmp(modo, "create") == 0){
         intialize_databmap(HDD.dbmap);
@@ -371,7 +419,13 @@ int main( int argc, char *argv[] )
         printf("Checkeo de consistencia\n");
         exit(0);
     }
+
     fclose(fptr);
+    //test();
+/*
+    generateBMP();
+    readBMP();
+    exit(0);*/
     for(int i = 0; i<argc; i++){
         printf("%s\n", argv[i]);
     }

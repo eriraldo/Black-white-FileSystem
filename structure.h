@@ -8,9 +8,9 @@
 #include <stdlib.h>
 
 typedef enum {TYPE_ORDINARY, TYPE_DIRECTORY} file_type;
-#define BLKSIZE 512
-#define NO_BLKS 20
-#define BLK_LIMIT 10
+#define BLKSIZE 8192
+#define NO_BLKS 150
+#define BLK_LIMIT 130
 
 //STRUCUTRES
 typedef struct tree

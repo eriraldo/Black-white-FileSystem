@@ -9,7 +9,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_FILE_OFFSET_BITS=64")
 include_directories(.)
 
-add_executable(Black_white_FileSystem main.c bwfs.c structure.h structure_functions.c)
+add_executable(Black_white_FileSystem main.c bwfs.c structure.h structure_functions.c bmpGen.c bmpGen.h)
 
 target_link_libraries(Black_white_FileSystem PUBLIC ${FUSE_LIBRARIES})
 target_include_directories(Black_white_FileSystem PUBLIC ${FUSE_INCLUDE_DIRS})

@@ -142,6 +142,33 @@ Black_white_FileSystem/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/build
 .PHONY : Black_white_FileSystem/fast
 
+bmpGen.o: bmpGen.c.o
+
+.PHONY : bmpGen.o
+
+# target to build an object file
+bmpGen.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/bmpGen.c.o
+.PHONY : bmpGen.c.o
+
+bmpGen.i: bmpGen.c.i
+
+.PHONY : bmpGen.i
+
+# target to preprocess a source file
+bmpGen.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/bmpGen.c.i
+.PHONY : bmpGen.c.i
+
+bmpGen.s: bmpGen.c.s
+
+.PHONY : bmpGen.s
+
+# target to generate assembly for a file
+bmpGen.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Black_white_FileSystem.dir/build.make CMakeFiles/Black_white_FileSystem.dir/bmpGen.c.s
+.PHONY : bmpGen.c.s
+
 bwfs.o: bwfs.c.o
 
 .PHONY : bwfs.o
@@ -232,6 +259,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... Black_white_FileSystem"
+	@echo "... bmpGen.o"
+	@echo "... bmpGen.i"
+	@echo "... bmpGen.s"
 	@echo "... bwfs.o"
 	@echo "... bwfs.i"
 	@echo "... bwfs.s"
