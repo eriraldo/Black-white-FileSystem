@@ -15,8 +15,7 @@ char* folder;
 char* almacenamiento;
 static int do_getattr(const char *path,struct stat *s)
 {
-
-	FILE *fptr;
+    FILE *fptr;
 	fptr=fopen(folder,"wb");
 	char * test = folder;
 	if(fptr != NULL)
@@ -111,10 +110,10 @@ void test(){
 
 static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *f)
 {
-	FILE *fptr;
+	/*FILE *fptr;
 	fptr=fopen(folder,"wb");
-	fseek (fptr, 0, SEEK_SET);
-
+	fseek (fptr, 0, SEEK_SET);*/
+    HARDDISK debug32 = HDD;
 	printf( "--> Getting The List of Files of %s\n", path );
 
 	filler( buffer, ".", NULL, 0 );
@@ -143,8 +142,8 @@ static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off
 		}
 	}
 
-	fwrite(&HDD, sizeof(HARDDISK), 1, fptr);
-	fclose(fptr);
+	/*fwrite(&HDD, sizeof(HARDDISK), 1, fptr);
+	fclose(fptr);*/
 	return 0;
 }
 
@@ -376,13 +375,15 @@ int main( int argc, char *argv[] )
 
     FILE *fptr;
 
-    fptr=fopen(folder,"ab+");
-    fseek (fptr, 0, SEEK_END);
 
-    int size = ftell(fptr);
+    int size = 0;
+
 
     if(strcmp(modo, "mount") == 0){
         struct stat st2 = {0};
+        fptr=fopen(folder,"ab+");
+        fseek (fptr, 0, SEEK_END);
+        size = ftell(fptr);
         if(stat(argv[3], &st2) == -1){
             mkdir(argv[3], 0700);
         }
@@ -397,7 +398,7 @@ int main( int argc, char *argv[] )
         else{
             fseek (fptr, 0, SEEK_SET);
             while(fread(&HDD, sizeof(HARDDISK), 1, fptr));
-
+            HARDDISK debug32 = HDD;
             printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
             printf("\tFILE SYSTEM RE-MOUNTED\n");
 
@@ -409,6 +410,9 @@ int main( int argc, char *argv[] )
 
 
     }else if(strcmp(modo, "create") == 0){
+        fptr=fopen(folder,"wb");
+        fseek (fptr, 0, SEEK_END);
+        size = ftell(fptr);
         intialize_databmap(HDD.dbmap);
         intialize_inodebmap(HDD.ibmap);
         intialize_nodebmap(HDD.nbmap);

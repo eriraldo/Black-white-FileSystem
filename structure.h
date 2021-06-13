@@ -10,7 +10,7 @@
 typedef enum {TYPE_ORDINARY, TYPE_DIRECTORY} file_type;
 #define BLKSIZE 8192
 #define NO_BLKS 150
-#define BLK_LIMIT 130
+#define BLK_LIMIT 10
 
 //STRUCUTRES
 typedef struct tree
