@@ -3,15 +3,10 @@
 
 extern char* folder;
 extern char* almacenamiento;
+extern HARDDISK HDD;
 void generateBMP(){
     int asd = sizeof(HARDDISK);
-    FILE *ptr;
 
-    ptr = fopen(folder,"rb");  // r for read, b for binary
-    fseek (ptr, 0, SEEK_END);
-    fseek (ptr, 0, SEEK_SET);
-    unsigned char buffer[sizeof(HARDDISK)];
-    fread(buffer,sizeof(buffer),1,ptr);
     int asd2 = _pixelbytesize;
 
     FILE *fp = fopen(almacenamiento,"wb");
@@ -31,7 +26,6 @@ void generateBMP(){
     pbitmap->bitmapinfoheader.xpixelpermeter = _xpixelpermeter ;
     pbitmap->bitmapinfoheader.numcolorspallette = 0;
     fwrite (pbitmap, 1, sizeof(bitmap),fp);
-    printf("SIZEEE: %lu\n", sizeof(bitmap));
     memset(pixelbuffer,pixel,sizeof(HARDDISK));
     //fwrite(pixelbuffer,1,sizeof(HARDDISK),fp);
 
@@ -39,9 +33,8 @@ void generateBMP(){
     fseek (fp, 0, SEEK_END);
     int size2 = ftell(fp);
 
-    fwrite(buffer,1,sizeof(HARDDISK),fp);
+    fwrite(&HDD,1,sizeof(HARDDISK),fp);
     fclose(fp);
-    fclose(ptr);
     free(pbitmap);
     free(pixelbuffer);
 }

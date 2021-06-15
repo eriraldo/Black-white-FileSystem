@@ -16,12 +16,6 @@ char* almacenamiento;
 extern HARDDISK HDD;
 static int do_getattr(const char *path,struct stat *s)
 {
-    FILE *fptr;
-	fptr=fopen(folder,"wb");
-	char * test = folder;
-	if(fptr != NULL)
-	    fseek (fptr, 0, SEEK_SET);
-
 	printf( "[getattr] Llamado\n" );
 	printf("\n\tARBOL:\n");
 	imprimirArbol(HDD.t.rootno);
@@ -42,9 +36,6 @@ static int do_getattr(const char *path,struct stat *s)
 		s->st_mode=S_IFDIR | 0755;
 		s->st_nlink=1;
 		s->st_blocks=s->st_blksize=s->st_size=0;
-
-		fwrite(&HDD, sizeof(HARDDISK), 1, fptr);
-		fclose(fptr);
 		return 0;
 	}
 	else if(strcmp(path,"/.Trash")!=0 && strcmp(path,"/.Trash-1000")!=0 && strcmp(path,"/.xdg-volume-info")!=0 && strcmp(path,"/autorun.inf")!=0)
@@ -64,9 +55,6 @@ static int do_getattr(const char *path,struct stat *s)
 		s->st_blocks=HDD.inode[HDD.node[temp].ino].no_blocks;
 		s->st_blksize=BLKSIZE;
 		s->st_size=HDD.inode[HDD.node[temp].ino].filesize;//s->st_size=BLKSIZE*HDD.inode[HDD.node[temp].ino].no_blocks;
-
-		fwrite(&HDD, sizeof(HARDDISK), 1, fptr);
-		fclose(fptr);
 		return 0;
 	}
 }
@@ -111,9 +99,6 @@ void test(){
 
 static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *f)
 {
-	/*FILE *fptr;
-	fptr=fopen(folder,"wb");
-	fseek (fptr, 0, SEEK_SET);*/
     HARDDISK debug32 = HDD;
 	printf( "--> Tomando la lista de archivos de la ruta %s\n", path ); //
 
@@ -142,9 +127,6 @@ static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off
 			ptr=HDD.node[ptr].nextno;
 		}
 	}
-
-	/*fwrite(&HDD, sizeof(HARDDISK), 1, fptr);
-	fclose(fptr);*/
 	return 0;
 }
 
@@ -180,7 +162,7 @@ static int do_create (const char *path, mode_t mode, struct fuse_file_info *f)
 {
 	printf( "--> Intentando de crear %s\n", path);
 
-	struct stat *s=(struct stat*)malloc(sizeof(struct stat));
+	struct stat *s=(struct stat*)malloc(sizeof(struct stat) + 1);
 	s->st_gid=getgid();
 	s->st_uid=getuid();
 	s->st_atime=s->st_mtime=time(NULL);
@@ -229,7 +211,7 @@ static int do_read(const char *path, char *buffer, size_t size,off_t offset, str
 	}
 
 	int number_blocks=HDD.inode[HDD.node[temp].ino].no_blocks-1, j;	
-	char *text=(char*)calloc(size,sizeof(char));
+    char *text=(char*)calloc(size + sizeof(HARDDISK),sizeof(char));
     HARDDISK debug = HDD;
 	for(j=0;j<=number_blocks;j++)
 	{
@@ -328,9 +310,14 @@ static int do_open(const char *path, struct fuse_file_info *fi)
 		return 0;
 };
 
-void do_rename(char* from,char* to){
-
+static int do_rename(const char *from, const char *to){
+    return 1;
 };
+
+static int do_flush(const char *path, struct fuse_file_info *fi){
+    generateBMP();
+    return 0;
+}
 static struct fuse_operations operations = {
     .getattr = do_getattr,
     .readdir = do_readdir,	//ls function
@@ -344,6 +331,7 @@ static struct fuse_operations operations = {
     .chmod = do_chmod,		//CHANGING PERMISSION
     .open = do_open,
     .rename = do_rename,
+    .flush = do_flush,
 };
 
 
@@ -374,23 +362,18 @@ int main( int argc, char *argv[] )
     if(stat(folder, &st ) == -1){
         mkdir(folder, 0700);
     }
-    char* archivo = "Harddisk.dat";
-    strcat(folder,archivo);
     char* archivoBMP = "almacenamiento.bmp";
     strcat(almacenamiento,archivoBMP);
-
-
-    FILE *fptr;
-
-
+    FILE *fp;
     int size = 0;
-
-
     if(strcmp(modo, "mount") == 0){
         struct stat st2 = {0};
-        fptr=fopen(folder,"ab+");
-        fseek (fptr, 0, SEEK_END);
-        size = ftell(fptr);
+        fp=fopen(almacenamiento,"rb");
+        if(fp == NULL){
+            fp = fopen(almacenamiento,"wb");
+        }
+        fseek (fp, 0, SEEK_END);
+        size = ftell(fp);
         if(stat(argv[3], &st2) == -1){
             mkdir(argv[3], 0700);
         }
@@ -403,8 +386,8 @@ int main( int argc, char *argv[] )
             printf("\tSISTEMA DE ARCHIVOS MONTADO\n");
         }
         else{
-            fseek (fptr, 0, SEEK_SET);
-            while(fread(&HDD, sizeof(HARDDISK), 1, fptr));
+            fseek (fp, headerSize, SEEK_SET);
+            while(fread(&HDD, sizeof(HARDDISK), 1, fp));
             HARDDISK debug32 = HDD;
             printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
             printf("\tSISTEMA DE ARCHIVOS MONTADO NUEVAMENTE\n");
@@ -414,31 +397,19 @@ int main( int argc, char *argv[] )
         }
         argv[1] = "-f";
         argv[2] = "-s";
-
+        fclose(fp);
 
     }else if(strcmp(modo, "create") == 0){
-        fptr=fopen(folder,"wb");
-        fseek (fptr, 0, SEEK_END);
-        size = ftell(fptr);
         iniciarDataBmap(HDD.dbmap);
         iniciarINodoBmap(HDD.ibmap);
         iniciarNodoBmap(HDD.nbmap);
         crearArbol();
-        fwrite(&HDD, sizeof(HARDDISK), 1, fptr);
+        generateBMP();
         exit(0);
     }else{
         printf("Checkeo de consistencia\n");
         exit(0);
     }
 
-    fclose(fptr);
-    //test();
-/*
-    generateBMP();
-    readBMP();
-    exit(0);*/
-    for(int i = 0; i<argc; i++){
-        printf("%s\n", argv[i]);
-    }
 	return fuse_main( argc, argv, &operations, NULL );
 }
