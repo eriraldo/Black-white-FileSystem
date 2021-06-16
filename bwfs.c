@@ -18,7 +18,6 @@ static int do_getattr(const char *path,struct stat *s)
 {
 	printf( "[getattr] Llamado\n" );
 	printf("\n\tARBOL:\n");
-	imprimirArbol(HDD.t.rootno);
 	printf( "\n\tAtributos de %s solicitados\n", path );
 
 
@@ -120,8 +119,8 @@ static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off
 		while(ptr!=-1)
 		{
 			char *d,*name;
-			d=(char*)calloc(strlen(path),sizeof(char));
-			name=(char*)calloc(strlen(path),sizeof(char));
+			d=(char*)calloc(strlen(path)+1,sizeof(char));
+			name=(char*)calloc(strlen(path)+1,sizeof(char));
 			parsearRuta(HDD.node[ptr].path_name,d,name);
 			filler( buffer, name, NULL, 0 );
 			ptr=HDD.node[ptr].nextno;
@@ -162,7 +161,7 @@ static int do_create (const char *path, mode_t mode, struct fuse_file_info *f)
 {
 	printf( "--> Intentando de crear %s\n", path);
 
-	struct stat *s=(struct stat*)malloc(sizeof(struct stat) + 1);
+	struct stat *s=(struct stat*)malloc(sizeof(struct stat));
 	s->st_gid=getgid();
 	s->st_uid=getuid();
 	s->st_atime=s->st_mtime=time(NULL);
@@ -200,26 +199,37 @@ static int do_unlink(const char *path)
 
 static int do_read(const char *path, char *buffer, size_t size,off_t offset, struct fuse_file_info *fi)
 {
+    size_t size2 = size;
 	printf( "--> Intentado de leer %s, %lu, %lu\n", path, offset, size );
-
+    HARDDISK debug = HDD;
 	int temp = buscarNodo(path,HDD.t.rootno);
-	size=HDD.inode[HDD.node[temp].ino].filesize;
+
 	if(temp == -1)
 	{
 		printf("RUTA INVALIDA\n");
 		return -ENOENT;
 	}
+    size_t size1=HDD.inode[HDD.node[temp].ino].filesize;
 
-	int number_blocks=HDD.inode[HDD.node[temp].ino].no_blocks-1, j;	
-    char *text=(char*)calloc(size + sizeof(HARDDISK),sizeof(char));
-    HARDDISK debug = HDD;
+	int number_blocks=HDD.inode[HDD.node[temp].ino].no_blocks-1, j;
+	char text [sizeof(HARDDISK)];
 	for(j=0;j<=number_blocks;j++)
 	{
 		strncat(text, (HDD.inode[HDD.node[temp].ino].bp[j])->blk ,(HDD.inode[HDD.node[temp].ino].bp[j])->end);
 	}
+    //strcpy(text,cat);
+    char* text2 = text;
+    if(offset < size1){
+        if(offset + size > size1){
+            size = size1 - offset;
+        }
+        memcpy(buffer, text2+offset, size);
+    }else{
+        size = 0;
+        strcpy(buffer,"");
+    }
 
-    memcpy(buffer, text+offset, size);
-    free(text);
+
 
     return size;
 }
