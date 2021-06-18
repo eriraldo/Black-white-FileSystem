@@ -321,7 +321,16 @@ static int do_open(const char *path, struct fuse_file_info *fi)
 };
 
 static int do_rename(const char *from, const char *to){
-    return 1;
+    int temp = buscarNodo(from,HDD.t.rootno);
+
+    if(temp == -1)
+    {
+        printf("RUTA INVALIDA\n");
+        return -ENOENT;
+    }
+    strcpy(HDD.node[temp].path_name,to);
+    HARDDISK debug2 = HDD;
+    return 0;
 };
 
 static int do_flush(const char *path, struct fuse_file_info *fi){
