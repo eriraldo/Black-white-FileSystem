@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include"structure.h"
-HARDDISK HDD;
+DISCODURO HDD;
 void imprimirArbol(int rootno)
 {
 	if(rootno==-1)
@@ -37,11 +37,11 @@ int crearRaiz()
 	return index;
 }
 
-int buscarNodo(const char *path,int rootno)
+int buscarNodo(const char *ruta,int rootno)
 {
 	if(rootno==-1)
 		return -1;
-	else if(strcmp(HDD.node[rootno].path_name,path)==0)
+	else if(strcmp(HDD.node[rootno].path_name,ruta)==0)
 		return rootno;
 	else
 	{
@@ -49,7 +49,7 @@ int buscarNodo(const char *path,int rootno)
 		int ans;
  		while(temp!=-1)
 		{
-        	ans=buscarNodo(path,temp);
+        	ans=buscarNodo(ruta,temp);
 			if(ans!=-1)
 				return ans;
 			temp=HDD.node[temp].nextno;
@@ -58,14 +58,14 @@ int buscarNodo(const char *path,int rootno)
 	}
 }
 
-int hacerNodo(const char *path,int rootno,struct stat *s,file_type ftype)
+int hacerNodo(const char *ruta,int rootno,struct stat *s,file_type ftype)
 {
 	int inode_no=hacerInodo(s,ftype);
 	if(inode_no == -1)
 	{
 		return -1;
 	}
-	else if(buscarNodo(path,rootno)!=-1)
+	else if(buscarNodo(ruta,rootno)!=-1)
 	{
 		printf("El archivo ya existe\n");
 		return -1;
@@ -75,9 +75,9 @@ int hacerNodo(const char *path,int rootno,struct stat *s,file_type ftype)
 		int index=buscarNodoVacio(HDD.nbmap);
 		int j;
 		char *d,*name;
-		d=(char*)calloc(strlen(path),sizeof(char));
-		name=(char*)calloc(strlen(path),sizeof(char));
-		parsearRuta(path,d,name);
+		d=(char*)calloc(strlen(ruta),sizeof(char));
+		name=(char*)calloc(strlen(ruta),sizeof(char));
+		parsearRuta(ruta,d,name);
 
 		int par=buscarNodo(d,rootno);
 
@@ -89,7 +89,7 @@ int hacerNodo(const char *path,int rootno,struct stat *s,file_type ftype)
 
 		int length=HDD.node[par].no_children;
 		HDD.node[index].ino=inode_no;
-		strcpy(HDD.node[index].path_name,path);
+		strcpy(HDD.node[index].path_name,ruta);
 		HDD.node[index].parentno=par;
 		HDD.node[index].no_children=0;
 
@@ -131,9 +131,9 @@ int hacerNodo(const char *path,int rootno,struct stat *s,file_type ftype)
 	}
 }
 
-int eliminarNodo(const char *path,int rootno)
+int eliminarNodo(const char *ruta,int rootno)
 {
-	int rn=buscarNodo(path,rootno);
+	int rn=buscarNodo(ruta,rootno);
 	if(rn==-1)
 	{
 		printf("ARCHIVO NO ENCONTRADO\n");
@@ -178,25 +178,25 @@ int eliminarNodo(const char *path,int rootno)
 		return 1;
 	}
 }
-void parsearRuta(const char* path,char *directory,char *name)
+void parsearRuta(const char* ruta,char *directory,char *name)
 {
-   int length=strlen(path);
+   int length=strlen(ruta);
    int i=length-1,j=0;
 
-   while(path[i]!='/')
+   while(ruta[i]!='/')
    	i--;
 
    if(i==0)
-   	directory[0]=path[0];
+   	directory[0]=ruta[0];
 
    else
 	{
 		for (j=0;j<i;j++)
-			directory[j]=path[j];
+			directory[j]=ruta[j];
 	}
    i=0;j++;
    while(j<length)
-   	name[i++]=path[j++];
+   	name[i++]=ruta[j++];
 }
 
 void iniciarNodoBmap(NBMAP *n)
@@ -303,10 +303,10 @@ void limpiarInfoINodo(){
 }
 
 void llenarData(){
-    HARDDISK debug = HDD;
+    DISCODURO debug = HDD;
     limpiarInfoINodo();
     //HDD.inode[1].bp[0] = &HDD.block[0];
-    HARDDISK debug2 = HDD;
+    DISCODURO debug2 = HDD;
     int initialBlock = 0;
     for(int i = 0; i<NO_BLKS; i++) {
         if(HDD.inode[i].no_blocks == 0)
@@ -323,7 +323,7 @@ void llenarData(){
             }*/
         }
     }
-    HARDDISK debug3 = HDD;
+    DISCODURO debug3 = HDD;
     /*
     for(int i = 0; i < 20; i++){
         if((HDD.block[i].end)) {

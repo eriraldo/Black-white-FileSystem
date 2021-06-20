@@ -71,17 +71,17 @@ typedef struct node_bitmap
 	int check;
 }NBMAP;
 
-//TREE FUCNTIONS
+//TREE FUNCTIONS
 void crearArbol();
 int crearRaiz();
-int hacerNodo(const char *path,int rootno,struct stat *s,file_type ftype);
-int buscarNodo(const char *path,int rootno);
-int eliminarNodo(const char *path,int rootno);
-void parsearRuta(const char* path,char *directory,char *name);
+int hacerNodo(const char *ruta,int rootno,struct stat *s,file_type ftype);
+int buscarNodo(const char *ruta,int rootno);
+int eliminarNodo(const char *ruta,int rootno);
+void parsearRuta(const char* ruta,char *directory,char *name);
 void imprimirArbol(int rootno);
 void llenarData();
 
-//BLOCK FUCNTIONS
+//BLOCK FUNCTIONS
 int hacerBloque(int inode_no);
 int hacerInodo(struct stat *s,file_type ftype);
 void iniciarINodoBmap(struct inode_bitmap *ibp);
@@ -91,9 +91,10 @@ int buscarINodoVacio(struct inode_bitmap *ibp);
 int buscarBloqueVacio(struct data_bitmap *dbp);
 int buscarNodoVacio(NBMAP *nbmap);
 void limpiarInfoINodo();
-
+#define log_struct(st, field, format, typecast) \
+  log_msg("    " #field " = " #format "\n", typecast st->field)
 //GLOBAL VARIABLES STRUCTURE
-typedef struct hardisk
+typedef struct discoDuro
 {
 	INODE inode[NO_BLKS];
 	BLOCK block[NO_BLKS];
@@ -102,6 +103,6 @@ typedef struct hardisk
 	NBMAP nbmap[NO_BLKS];
 	NODE node[NO_BLKS];
 	TREE t;
-}HARDDISK;
+}DISCODURO;
 
 

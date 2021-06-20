@@ -11,17 +11,21 @@
 #include <stdbool.h>
 #include "structure.h"
 #include "bmpGen.h"
+#include <stdarg.h>
+#include <linux/limits.h>
+#include <dirent.h>
+
 char* folder;
 char* almacenamiento;
-extern HARDDISK HDD;
-static int do_getattr(const char *path,struct stat *s)
+extern DISCODURO HDD;
+static int do_getattr(const char *ruta,struct stat *s)
 {
 	printf( "[getattr] Llamado\n" );
 	printf("\n\tARBOL:\n");
-	printf( "\n\tAtributos de %s solicitados\n", path );
+	printf( "\n\tAtributos de %s solicitados\n", ruta );
 
 
-	if(strcmp(path,"/")==0)
+	if(strcmp(ruta,"/")==0)
 	{
 		if(HDD.node[HDD.t.rootno].ino == -1)
 		{
@@ -37,9 +41,9 @@ static int do_getattr(const char *path,struct stat *s)
 		s->st_blocks=s->st_blksize=s->st_size=0;
 		return 0;
 	}
-	else if(strcmp(path,"/.Trash")!=0 && strcmp(path,"/.Trash-1000")!=0 && strcmp(path,"/.xdg-volume-info")!=0 && strcmp(path,"/autorun.inf")!=0)
+	else if(strcmp(ruta,"/.Trash")!=0 && strcmp(ruta,"/.Trash-1000")!=0 && strcmp(ruta,"/.xdg-volume-info")!=0 && strcmp(ruta,"/autorun.inf")!=0)
 	{
-		int temp=buscarNodo(path,HDD.t.rootno);
+		int temp=buscarNodo(ruta,HDD.t.rootno);
 		if(temp==-1)
 		{
 			printf("LA RUTA NO EXISTE\n");
@@ -58,6 +62,102 @@ static int do_getattr(const char *path,struct stat *s)
 	}
 }
 
+static int do_write(const char *ruta, const char *buffer, size_t size, off_t offset,struct fuse_file_info *f)
+{
+    printf( "--> Intentando de escribir %s, %lu, %lu\n", ruta, offset, size );
+
+    int temp = buscarNodo(ruta,HDD.t.rootno);offset=0;
+
+    if(temp == -1)
+    {
+        printf("RUTA INVALIDA\n");
+        return -ENOENT;
+    }
+
+    int last = (HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->end;
+    int rem_space=BLKSIZE-last;
+    int tempsize=size;
+    int written=0;
+
+    char text1[size];
+    while(rem_space<tempsize)
+    {
+        int size1=rem_space;
+        tempsize=tempsize-size1;
+
+
+        memcpy(text1 + (offset) ,buffer+written, size1);
+        written=written+size1;
+
+        for(int j=last;j<(last+size1);j++)
+            (HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->blk[j]=text1[j-last];
+
+        (HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->end += size1;
+
+        int inode_no=HDD.node[temp].ino;
+        int block_no=hacerBloque(inode_no);
+        HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks]=&HDD.block[block_no];
+        HDD.inode[inode_no].no_blocks++;
+
+        last = (HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->end;
+
+        rem_space=BLKSIZE;
+    }
+
+    int size1=rem_space;
+    char text2[size1];
+
+    memcpy(text2 + (offset) ,buffer+written, size1);
+
+    for(int j=last;j<(last+size1);j++)
+        (HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->blk[j]=text2[j-last];
+
+    (HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->end += size1;
+
+
+    //printf("%s\n",buffer );
+    HDD.inode[HDD.node[temp].ino].filesize+=size;
+    DISCODURO debug = HDD;
+    return size;
+}
+
+static int do_read(const char *ruta, char *buffer, size_t size,off_t offset, struct fuse_file_info *fi)
+{
+    size_t size2 = size;
+    printf( "--> Intentado de leer %s, %lu, %lu\n", ruta, offset, size );
+    DISCODURO debug = HDD;
+    int temp = buscarNodo(ruta,HDD.t.rootno);
+
+    if(temp == -1)
+    {
+        printf("RUTA INVALIDA\n");
+        return -ENOENT;
+    }
+    size_t size1=HDD.inode[HDD.node[temp].ino].filesize;
+
+    int number_blocks=HDD.inode[HDD.node[temp].ino].no_blocks-1, j;
+    char text [sizeof(DISCODURO)];
+    for(j=0;j<=number_blocks;j++)
+    {
+        strncat(text, (HDD.inode[HDD.node[temp].ino].bp[j])->blk ,(HDD.inode[HDD.node[temp].ino].bp[j])->end);
+    }
+    //strcpy(text,cat);
+    char* text2 = text;
+    if(offset < size1){
+        if(offset + size > size1){
+            size = size1 - offset;
+        }
+        memcpy(buffer, text2+offset, size);
+    }else{
+        size = 0;
+        strcpy(buffer,"");
+    }
+
+
+
+    return size;
+}
+/*
 void printFile(){
 
     FILE *ptr;
@@ -95,16 +195,16 @@ void test(){
     fclose(fp);
     fclose(ptr);
 }
-
-static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *f)
+*/
+static int do_readdir(const char *ruta,void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *f)
 {
-    HARDDISK debug32 = HDD;
-	printf( "--> Tomando la lista de archivos de la ruta %s\n", path ); //
+    DISCODURO debug32 = HDD;
+	printf( "--> Tomando la lista de archivos de la ruta %s\n", ruta ); //
 
 	filler( buffer, ".", NULL, 0 );
 	filler( buffer, "..", NULL, 0 );
 	printf("%s",HDD.node[HDD.t.rootno+1].path_name);
-	int temp=buscarNodo(path,HDD.t.rootno);
+	int temp=buscarNodo(ruta,HDD.t.rootno);
 
 	if(temp==-1)
 	{
@@ -119,8 +219,8 @@ static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off
 		while(ptr!=-1)
 		{
 			char *d,*name;
-			d=(char*)calloc(strlen(path)+1,sizeof(char));
-			name=(char*)calloc(strlen(path)+1,sizeof(char));
+			d=(char*)calloc(strlen(ruta)+1,sizeof(char));
+			name=(char*)calloc(strlen(ruta)+1,sizeof(char));
 			parsearRuta(HDD.node[ptr].path_name,d,name);
 			filler( buffer, name, NULL, 0 );
 			ptr=HDD.node[ptr].nextno;
@@ -129,37 +229,11 @@ static int do_readdir(const char *path,void *buffer, fuse_fill_dir_t filler, off
 	return 0;
 }
 
-static int do_mkdir(const char *path, mode_t mode)
+
+
+static int do_create (const char *ruta, mode_t mode, struct fuse_file_info *f)
 {
-	printf( "--> Intentado de crear el directorio %s\n", path);
-
-
-	struct stat *s=(struct stat*)malloc(sizeof(struct stat));
-	s->st_gid=getgid();
-	s->st_uid=getuid();
-	s->st_atime=s->st_mtime=time(NULL);
-	s->st_mode=S_IFDIR | 0775;
-	s->st_nlink=1;
-	int temp=hacerNodo(path,HDD.t.rootno,s,TYPE_DIRECTORY);
-
-	return 0;
-}
-
-static int do_rmdir(const char * path)
-{
-	printf( "--> Intentando de remover el directorio %s\n", path);
-
-	int ans=eliminarNodo(path,HDD.t.rootno);
-	if(ans==0)
-	{
-		return -ENOTEMPTY;
-	}
-	return 0;
-}
-
-static int do_create (const char *path, mode_t mode, struct fuse_file_info *f)
-{
-	printf( "--> Intentando de crear %s\n", path);
+	printf( "--> Intentando de crear %s\n", ruta);
 
 	struct stat *s=(struct stat*)malloc(sizeof(struct stat));
 	s->st_gid=getgid();
@@ -167,13 +241,13 @@ static int do_create (const char *path, mode_t mode, struct fuse_file_info *f)
 	s->st_atime=s->st_mtime=time(NULL);
 	s->st_mode=S_IFREG | 0644;
 	s->st_nlink=1;
-	int temp=hacerNodo(path,HDD.t.rootno,s,TYPE_ORDINARY);
+	int temp=hacerNodo(ruta,HDD.t.rootno,s,TYPE_ORDINARY);
 	return 0;
 }
 
-static int do_mknod (const char *path, mode_t mode, dev_t dev)
+static int do_mknod (const char *ruta, mode_t mode, dev_t dev)
 {
-	printf( "--> Intentando de crear  %s\n", path);
+	printf( "--> Intentando de crear  %s\n", ruta);
 
 	struct stat *s=(struct stat*)malloc(sizeof(struct stat));
 	s->st_gid=getgid();
@@ -181,15 +255,15 @@ static int do_mknod (const char *path, mode_t mode, dev_t dev)
 	s->st_atime=s->st_mtime=time(NULL);
 	s->st_mode=S_IFREG | 0644;
 	s->st_nlink=1;
-	int temp=hacerNodo(path,HDD.t.rootno,s,TYPE_ORDINARY);
+	int temp=hacerNodo(ruta,HDD.t.rootno,s,TYPE_ORDINARY);
 	return 0;
 }
 
-static int do_unlink(const char *path)
+static int do_unlink(const char *ruta)
 {
-	printf( "--> Intentando de desligar  %s\n", path);
+	printf( "--> Intentando de desligar  %s\n", ruta);
 
-	int ans=eliminarNodo(path,HDD.t.rootno);
+	int ans=eliminarNodo(ruta,HDD.t.rootno);
 	if(ans==0)
 	{
 		return -ENOTEMPTY;
@@ -197,107 +271,40 @@ static int do_unlink(const char *path)
 	return 0;
 }
 
-static int do_read(const char *path, char *buffer, size_t size,off_t offset, struct fuse_file_info *fi)
+static int do_mkdir(const char *ruta, mode_t mode)
 {
-    size_t size2 = size;
-	printf( "--> Intentado de leer %s, %lu, %lu\n", path, offset, size );
-    HARDDISK debug = HDD;
-	int temp = buscarNodo(path,HDD.t.rootno);
+    printf( "--> Intentado de crear el directorio %s\n", ruta);
 
-	if(temp == -1)
-	{
-		printf("RUTA INVALIDA\n");
-		return -ENOENT;
-	}
-    size_t size1=HDD.inode[HDD.node[temp].ino].filesize;
 
-	int number_blocks=HDD.inode[HDD.node[temp].ino].no_blocks-1, j;
-	char text [sizeof(HARDDISK)];
-	for(j=0;j<=number_blocks;j++)
-	{
-		strncat(text, (HDD.inode[HDD.node[temp].ino].bp[j])->blk ,(HDD.inode[HDD.node[temp].ino].bp[j])->end);
-	}
-    //strcpy(text,cat);
-    char* text2 = text;
-    if(offset < size1){
-        if(offset + size > size1){
-            size = size1 - offset;
-        }
-        memcpy(buffer, text2+offset, size);
-    }else{
-        size = 0;
-        strcpy(buffer,"");
+    struct stat *s=(struct stat*)malloc(sizeof(struct stat));
+    s->st_gid=getgid();
+    s->st_uid=getuid();
+    s->st_atime=s->st_mtime=time(NULL);
+    s->st_mode=S_IFDIR | 0775;
+    s->st_nlink=1;
+    int temp=hacerNodo(ruta,HDD.t.rootno,s,TYPE_DIRECTORY);
+
+    return 0;
+}
+static int do_rmdir(const char * ruta)
+{
+    printf( "--> Intentando de remover el directorio %s\n", ruta);
+
+    int ans=eliminarNodo(ruta,HDD.t.rootno);
+    if(ans==0)
+    {
+        return -ENOTEMPTY;
     }
-
-
-
-    return size;
+    return 0;
 }
 
-static int do_write(const char *path, const char *buffer, size_t size, off_t offset,struct fuse_file_info *f)
+
+
+static int do_chmod(const char *ruta, mode_t mode)
 {
-	printf( "--> Intentando de escribir %s, %lu, %lu\n", path, offset, size );
+	printf( "--> Intentando de cambiar permisos %s\n", ruta); //
 
-	int temp = buscarNodo(path,HDD.t.rootno);offset=0;
-
-	if(temp == -1)
-	{
-		printf("RUTA INVALIDA\n");
-		return -ENOENT;
-	}
-
-	int last = (HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->end;
-	int rem_space=BLKSIZE-last;
-	int tempsize=size;
-	int written=0;
-
-	char text1[size];
-	while(rem_space<tempsize)
-	{
-		int size1=rem_space; 
-		tempsize=tempsize-size1; 
-		
-
-		memcpy(text1 + (offset) ,buffer+written, size1);
-		written=written+size1;
-
-		for(int j=last;j<(last+size1);j++)
-			(HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->blk[j]=text1[j-last];
-
-		(HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->end += size1;
-
-		int inode_no=HDD.node[temp].ino;
-		int block_no=hacerBloque(inode_no);
-		HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks]=&HDD.block[block_no];
-		HDD.inode[inode_no].no_blocks++;
-
-		last = (HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->end;
-
-		rem_space=BLKSIZE;
-	}
-
-	int size1=rem_space;
-	char text2[size1];
-
-	memcpy(text2 + (offset) ,buffer+written, size1);
-
-	for(int j=last;j<(last+size1);j++)
-		(HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->blk[j]=text2[j-last];
-
-	(HDD.inode[HDD.node[temp].ino].bp[HDD.inode[HDD.node[temp].ino].no_blocks-1])->end += size1;
-
-
-	//printf("%s\n",buffer );
-	HDD.inode[HDD.node[temp].ino].filesize+=size;
-    HARDDISK debug = HDD;
-	return size;
-}
-
-static int do_chmod(const char *path, mode_t mode)
-{
-	printf( "--> Intentando de cambiar permisos %s\n", path); //
-
-	int temp = buscarNodo(path,HDD.t.rootno);
+	int temp = buscarNodo(ruta,HDD.t.rootno);
 
 	if(temp == -1)
 	{
@@ -308,15 +315,15 @@ static int do_chmod(const char *path, mode_t mode)
 	return 0;
 }
 
-static int do_open(const char *path, struct fuse_file_info *fi)
+static int do_open(const char *ruta, struct fuse_file_info *fi)
 {
-	printf( "--> Intentando de abrir %s\n", path);
+	printf( "--> Intentando de abrir %s\n", ruta);
 
-	int temp = buscarNodo(path,HDD.t.rootno);
+	int temp = buscarNodo(ruta,HDD.t.rootno);
 
 	if(temp==-1)
 		return -ENOENT;
-	else if(strcmp(path,"/")!=0)
+	else if(strcmp(ruta,"/")!=0)
 		return 0;
 };
 
@@ -329,14 +336,148 @@ static int do_rename(const char *from, const char *to){
         return -ENOENT;
     }
     strcpy(HDD.node[temp].path_name,to);
-    HARDDISK debug2 = HDD;
+    DISCODURO debug2 = HDD;
     return 0;
 };
 
-static int do_flush(const char *path, struct fuse_file_info *fi){
-    generateBMP();
+static int do_flush(const char *ruta, struct fuse_file_info *fi){
+    generarBMP();
     return 0;
+};
+/*
+void log_msg(const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    FILE *fp;
+    fp = fopen("bwfs/reportMessage.txt","w");
+    vfprintf(fp, format, ap);
+    fclose(fp);
+
 }
+int log_error(char *func)
+{
+    int ret = -errno;
+
+    log_msg("    ERROR %s: %s\n", func, strerror(errno));
+
+    return ret;
+}
+void log_retstat(char *func, int retstat)
+{
+    int errsave = errno;
+    log_msg("    %s returned %d\n", func, retstat);
+    errno = errsave;
+}
+
+// make a system call, checking (and reporting) return status and
+// possibly logging error
+int log_syscall(char *func, int retstat, int min_ret)
+{
+    log_retstat(func, retstat);
+
+    if (retstat < min_ret) {
+        log_error(func);
+        retstat = -errno;
+    }
+
+    return retstat;
+}
+/*
+static void bb_fullpath(char fpath[PATH_MAX], const char *ruta)
+{
+    strcpy(fpath, BB_DATA->rootdir);
+    strncat(fpath, ruta, PATH_MAX); // ridiculously long paths will
+    // break here
+
+    log_msg("    bb_fullpath:  rootdir = \"%s\", ruta = \"%s\", fpath = \"%s\"\n",
+            BB_DATA->rootdir, ruta, fpath);
+}
+int do_statfs(const char *ruta, struct statvfs *statv)
+{
+    int retstat = 0;
+    char fpath[PATH_MAX];
+
+    log_msg("\nbb_statfs(ruta=\"%s\", statv=0x%08x)\n",
+            ruta, statv);
+    bb_fullpath(fpath, ruta);
+    // get stats for underlying filesystem
+    retstat = log_syscall("statvfs", statvfs(fpath, statv), 0);
+    log_statvfs(statv);
+    return retstat;
+}
+
+//*/
+//void log_fi (struct fuse_file_info *fi)
+//{
+//    log_msg("    fi:\n");
+//
+//    /** Open flags.  Available in open() and release() */
+//    //	int flags;
+//    log_struct(fi, flags, 0x%08x, );
+//
+//    /** Old file handle, don't use */
+//    //	unsigned long fh_old;
+//    log_struct(fi, fh_old, 0x%08lx,  );
+//
+//    /** In case of a write operation indicates if this was caused by a
+//        writepage */
+//    //	int writepage;
+//    log_struct(fi, writepage, %d, );
+//
+//    /** Can be filled in by open, to use direct I/O on this file.
+//        Introduced in version 2.4 */
+//    //	unsigned int keep_cache : 1;
+//    log_struct(fi, direct_io, %d, );
+//
+//    /** Can be filled in by open, to indicate, that cached file data
+//        need not be invalidated.  Introduced in version 2.4 */
+//    //	unsigned int flush : 1;
+//    log_struct(fi, keep_cache, %d, );
+//
+//    /** Padding.  Do not use*/
+//    //	unsigned int padding : 29;
+//
+//    /** File handle.  May be filled in by filesystem in open().
+//        Available in all other file operations */
+//    //	uint64_t fh;
+//    log_struct(fi, fh, 0x%016llx,  );
+//
+//    /** Lock owner id.  Available in locking operations and flush */
+//    //  uint64_t lock_owner;
+//    log_struct(fi, lock_owner, 0x%016llx, );
+//}
+//
+//int do_opendir(const char *ruta, struct fuse_file_info *fi) //CREO QUE YA FUNCIONA, FALTA REVISAR
+//{
+//    DIR *dp;
+//    int retstat = 0;
+//    //char fpath[PATH_MAX];
+//
+//    log_msg("\nbb_opendir(ruta=\"%s\", fi=0x%08x)\n",
+//            ruta, fi);
+//    int temp = buscarNodo(ruta,HDD.t.rootno);
+//
+//    if(temp==-1)
+//        return -ENOENT;
+//    else {
+//        dp = opendir(ruta);
+//        //return 0;
+//    }
+//
+//    // since opendir returns a pointer, takes some custom handling of
+//    // return status.
+//    log_msg("    opendir returned 0x%p\n", dp);
+//    if (dp == NULL)
+//        retstat = log_error("bb_opendir opendir");
+//
+//    fi->fh = (intptr_t) dp;
+//
+//    log_fi(fi);
+//
+//    return retstat;
+//}
+
 static struct fuse_operations operations = {
     .getattr = do_getattr,
     .readdir = do_readdir,	//ls function
@@ -351,6 +492,7 @@ static struct fuse_operations operations = {
     .open = do_open,
     .rename = do_rename,
     .flush = do_flush,
+    //.opendir = do_opendir,
 };
 
 
@@ -406,8 +548,8 @@ int main( int argc, char *argv[] )
         }
         else{
             fseek (fp, headerSize, SEEK_SET);
-            while(fread(&HDD, sizeof(HARDDISK), 1, fp));
-            HARDDISK debug32 = HDD;
+            while(fread(&HDD, sizeof(DISCODURO), 1, fp));
+            DISCODURO debug32 = HDD;
             printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
             printf("\tSISTEMA DE ARCHIVOS MONTADO NUEVAMENTE\n");
 
@@ -423,7 +565,7 @@ int main( int argc, char *argv[] )
         iniciarINodoBmap(HDD.ibmap);
         iniciarNodoBmap(HDD.nbmap);
         crearArbol();
-        generateBMP();
+        generarBMP();
         exit(0);
     }else{
         printf("Checkeo de consistencia\n");

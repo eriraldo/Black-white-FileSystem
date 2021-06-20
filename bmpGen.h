@@ -48,6 +48,6 @@ typedef struct {
 } bitmap;
 #pragma pack(pop)
 
-void generateBMP();
+void generarBMP();
 void readBMP();
 #endif //BLACK_WHITE_FILESYSTEM_BMPGEN_H

@@ -3,15 +3,15 @@
 
 extern char* folder;
 extern char* almacenamiento;
-extern HARDDISK HDD;
-void generateBMP(){
-    int asd = sizeof(HARDDISK);
+extern DISCODURO HDD;
+void generarBMP(){
+    int asd = sizeof(DISCODURO);
 
     int asd2 = _pixelbytesize;
 
     FILE *fp = fopen(almacenamiento,"wb");
     bitmap *pbitmap  = (bitmap*)calloc(1,sizeof(bitmap));
-    uint8_t *pixelbuffer = (uint8_t*)malloc(sizeof(HARDDISK));
+    uint8_t *pixelbuffer = (uint8_t*)malloc(sizeof(DISCODURO));
     strcpy(pbitmap->fileheader.signature,"BM");
     pbitmap->fileheader.filesize = _filesize;
     pbitmap->fileheader.fileoffset_to_pixelarray = sizeof(bitmap);
@@ -26,26 +26,26 @@ void generateBMP(){
     pbitmap->bitmapinfoheader.xpixelpermeter = _xpixelpermeter ;
     pbitmap->bitmapinfoheader.numcolorspallette = 0;
     fwrite (pbitmap, 1, sizeof(bitmap),fp);
-    memset(pixelbuffer,pixel,sizeof(HARDDISK));
-    //fwrite(pixelbuffer,1,sizeof(HARDDISK),fp);
+    memset(pixelbuffer,pixel,sizeof(DISCODURO));
+    //fwrite(pixelbuffer,1,sizeof(DISCODURO),fp);
 
     fseek (fp, headerSize, SEEK_SET);
     fseek (fp, 0, SEEK_END);
     int size2 = ftell(fp);
 
-    fwrite(&HDD,1,sizeof(HARDDISK),fp);
+    fwrite(&HDD,1,sizeof(DISCODURO),fp);
     fclose(fp);
     free(pbitmap);
     free(pixelbuffer);
 }
 
 void readBMP(){
-    int asd = sizeof(HARDDISK);
+    int asd = sizeof(DISCODURO);
     FILE *fp = fopen(almacenamiento,"rb");
     fseek (fp, 0, SEEK_END);
     fseek (fp, headerSize, SEEK_SET);
     FILE *fpTest = fopen("test.dat", "wb");
-    unsigned char buffer[sizeof(HARDDISK)];
+    unsigned char buffer[sizeof(DISCODURO)];
     fread(buffer,sizeof(buffer),1,fp);
     fseek (fpTest, 0, SEEK_END);
     fwrite(buffer,sizeof(buffer),1,fpTest);
