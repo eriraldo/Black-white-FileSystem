@@ -2,38 +2,38 @@
 #include<stdlib.h>
 #include<string.h>
 #include"structure.h"
-DISCODURO HDD;
+DISCODURO disco;
 void imprimirArbol(int rootno)
 {
 	if(rootno==-1)
 		printf("#\n");
-	printf("\t%s\n", HDD.node[rootno].path_name);
-	int ptr=HDD.node[rootno].headchildno;
+	printf("\t%s\n", disco.node[rootno].path_name);
+	int ptr=disco.node[rootno].cabezaNodoHijo;
 	while(ptr!=-1)
 	{
 		imprimirArbol(ptr);
-		ptr=HDD.node[ptr].nextno;
+		ptr=disco.node[ptr].signodo;
 	}
 }
 
 void crearArbol()
 {
-	HDD.t.rootno=crearRaiz();
+	disco.t.rootno=crearRaiz();
 }
 
 int crearRaiz()
 {
-	int index=buscarNodoVacio(HDD.nbmap);
+	int index=buscarNodoVacio(disco.nbmap);
 	if(index==-1)
 	{
 		return -1;
 	}
-	strcpy(HDD.node[index].path_name,"/");
-	HDD.node[index].ino=-1;
-	HDD.node[index].parentno=-1;
-	HDD.node[index].headchildno=-1;
-	HDD.node[index].nextno=-1;
-	HDD.node[index].no_children=0;
+	strcpy(disco.node[index].path_name,"/");
+	disco.node[index].inodo=-1;
+	disco.node[index].nodoPadre=-1;
+	disco.node[index].cabezaNodoHijo=-1;
+	disco.node[index].signodo=-1;
+	disco.node[index].nodoHijo=0;
 	return index;
 }
 
@@ -41,18 +41,18 @@ int buscarNodo(const char *ruta,int rootno)
 {
 	if(rootno==-1)
 		return -1;
-	else if(strcmp(HDD.node[rootno].path_name,ruta)==0)
+	else if(strcmp(disco.node[rootno].path_name,ruta)==0)
 		return rootno;
 	else
 	{
-		int temp=HDD.node[rootno].headchildno;
+		int temp=disco.node[rootno].cabezaNodoHijo;
 		int ans;
  		while(temp!=-1)
 		{
         	ans=buscarNodo(ruta,temp);
 			if(ans!=-1)
 				return ans;
-			temp=HDD.node[temp].nextno;
+			temp=disco.node[temp].signodo;
  		}
 
 	}
@@ -72,7 +72,7 @@ int hacerNodo(const char *ruta,int rootno,struct stat *s,file_type ftype)
 	}
 	else
 	{
-		int index=buscarNodoVacio(HDD.nbmap);
+		int index=buscarNodoVacio(disco.nbmap);
 		int j;
 		char *d,*name;
 		d=(char*)calloc(strlen(ruta),sizeof(char));
@@ -87,45 +87,45 @@ int hacerNodo(const char *ruta,int rootno,struct stat *s,file_type ftype)
 			return -1;
 		}
 
-		int length=HDD.node[par].no_children;
-		HDD.node[index].ino=inode_no;
-		strcpy(HDD.node[index].path_name,ruta);
-		HDD.node[index].parentno=par;
-		HDD.node[index].no_children=0;
+		int length=disco.node[par].nodoHijo;
+		disco.node[index].inodo=inode_no;
+		strcpy(disco.node[index].path_name,ruta);
+		disco.node[index].nodoPadre=par;
+		disco.node[index].nodoHijo=0;
 
-		if(HDD.inode[HDD.node[index].ino].type==TYPE_DIRECTORY)
+		if(disco.inode[disco.node[index].inodo].tipo==TYPE_DIRECTORY)
 		{
 			for(int i=0;i<BLK_LIMIT;i++)
-				HDD.inode[HDD.node[index].ino].bp[i]=NULL;
+				disco.inode[disco.node[index].inodo].bp[i]=NULL;
 		}
 		else
 		{
 			int block_no=hacerBloque(inode_no);
-			HDD.inode[HDD.node[index].ino].bp[HDD.inode[HDD.node[index].ino].no_blocks]=&HDD.block[block_no];
-			HDD.inode[inode_no].no_blocks++;
+			disco.inode[disco.node[index].inodo].bp[disco.inode[disco.node[index].inodo].no_blocks]=&disco.block[block_no];
+			disco.inode[inode_no].no_blocks++;
 		}
 
-		int ptr=HDD.node[par].headchildno;
+		int ptr=disco.node[par].cabezaNodoHijo;
 		if(ptr==-1)
 		{
 			ptr=index;
-			HDD.node[ptr].headchildno=-1;
-			HDD.node[ptr].nextno=-1;
-			HDD.node[par].headchildno=ptr;
+			disco.node[ptr].cabezaNodoHijo=-1;
+			disco.node[ptr].signodo=-1;
+			disco.node[par].cabezaNodoHijo=ptr;
 		}
 	    else
 		{
-			while(HDD.node[ptr].nextno!=-1)
+			while(disco.node[ptr].signodo!=-1)
 			{
-				ptr=HDD.node[ptr].nextno;
+				ptr=disco.node[ptr].signodo;
 			}
 
-			HDD.node[ptr].nextno=index;
-			ptr=HDD.node[ptr].nextno;
-			HDD.node[ptr].headchildno=-1;
-			HDD.node[ptr].nextno=-1;
+			disco.node[ptr].signodo=index;
+			ptr=disco.node[ptr].signodo;
+			disco.node[ptr].cabezaNodoHijo=-1;
+			disco.node[ptr].signodo=-1;
 		}
-		HDD.node[par].no_children++;
+		disco.node[par].nodoHijo++;
 
 		return index;
 	}
@@ -139,42 +139,42 @@ int eliminarNodo(const char *ruta,int rootno)
 		printf("ARCHIVO NO ENCONTRADO\n");
 		return 0;
 	}
-	else if(HDD.node[rn].no_children>0)
+	else if(disco.node[rn].nodoHijo>0)
 	{
 		printf("No se puede eliminar un directorio no vacio\n");
 		return 0;
 	}
 	else
 	{
-		int temp=HDD.node[rn].ino;
-		HDD.ibmap[temp].check=0;
-		int par=HDD.node[rn].parentno;
-		int ptr=HDD.node[par].headchildno;
-		int length=HDD.node[par].no_children;
-		if(HDD.node[ptr].ino==temp)
+		int temp=disco.node[rn].inodo;
+		disco.ibmap[temp].revisar=0;
+		int par=disco.node[rn].nodoPadre;
+		int ptr=disco.node[par].cabezaNodoHijo;
+		int length=disco.node[par].nodoHijo;
+		if(disco.node[ptr].inodo==temp)
 		{
-			HDD.node[par].headchildno=HDD.node[ptr].nextno;
-			HDD.node[par].no_children--;
+			disco.node[par].cabezaNodoHijo=disco.node[ptr].signodo;
+			disco.node[par].nodoHijo--;
 		}
 		else
 		{
-			while(HDD.node[HDD.node[ptr].nextno].ino!=temp)
+			while(disco.node[disco.node[ptr].signodo].inodo!=temp)
 			{
-				ptr=HDD.node[ptr].nextno;
+				ptr=disco.node[ptr].signodo;
 			}
-			int temp1=HDD.node[ptr].nextno;
-			HDD.node[ptr].nextno=HDD.node[temp1].nextno;
-			HDD.node[ptr].no_children--;
+			int temp1=disco.node[ptr].signodo;
+			disco.node[ptr].signodo=disco.node[temp1].signodo;
+			disco.node[ptr].nodoHijo--;
 		}
-		if(HDD.inode[HDD.node[rn].ino].type==TYPE_ORDINARY)
+		if(disco.inode[disco.node[rn].inodo].tipo==TYPE_ORDINARY)
 		{
-			for(int i=0;i<HDD.inode[HDD.node[rn].ino].no_blocks;i++)
+			for(int i=0;i<disco.inode[disco.node[rn].inodo].no_blocks;i++)
 			{
-				int bn=HDD.inode[HDD.node[rn].ino].bp[i]->blk_no;
-				HDD.dbmap[bn].check=0;
+				int bn=disco.inode[disco.node[rn].inodo].bp[i]->nodoBlk;
+				disco.dbmap[bn].revisar=0;
 			}
 		}
-		HDD.nbmap[rn].check=0;
+		disco.nbmap[rn].revisar=0;
 		return 1;
 	}
 }
@@ -204,7 +204,7 @@ void iniciarNodoBmap(NBMAP *n)
 	for(int i=0;i<NO_BLKS;i++)
 	{
 		n[i].node_no=i;
-		n[i].check=0;
+		n[i].revisar=0;
 	}
 }
 
@@ -213,7 +213,7 @@ void iniciarINodoBmap(IBMAP *ibp)
 	for(int i=0;i<NO_BLKS;i++)
 	{
 		ibp[i].inode_no=i;
-		ibp[i].check=0;
+		ibp[i].revisar=0;
 	}
 }
 
@@ -221,17 +221,17 @@ void iniciarDataBmap(DBMAP *dbp)
 {
 	for(int i=0;i<NO_BLKS;i++)
 	{
-		dbp[i].blk_no=i;
-		dbp[i].check=0;
+		dbp[i].nodoBlk=i;
+		dbp[i].revisar=0;
 	}
 }
 
 int buscarNodoVacio(NBMAP *n)
 {
 	for(int i=0;i<NO_BLKS;i++)
-		if(n[i].check==0)
+		if(n[i].revisar==0)
 		{
-			n[i].check=1;
+			n[i].revisar=1;
 			return n[i].node_no;
 		}
 	return -1;
@@ -240,9 +240,9 @@ int buscarNodoVacio(NBMAP *n)
 int buscarINodoVacio(IBMAP *ibp)
 {
 	for(int i=0;i<NO_BLKS;i++)
-		if(ibp[i].check==0)
+		if(ibp[i].revisar==0)
 		{
-			ibp[i].check=1;
+			ibp[i].revisar=1;
 			return ibp[i].inode_no;
 		}
 	return -1;
@@ -251,84 +251,84 @@ int buscarINodoVacio(IBMAP *ibp)
 int buscarBloqueVacio(DBMAP *dbp)
 {
 	for(int i=0;i<NO_BLKS;i++)
-		if(dbp[i].check==0)
+		if(dbp[i].revisar==0)
 		{
-			dbp[i].check=1;
-			return dbp[i].blk_no;
+			dbp[i].revisar=1;
+			return dbp[i].nodoBlk;
 		}
 	return -1;
 }
 
 int hacerBloque(int inode_no)
 {
-	int B_index=buscarBloqueVacio(HDD.dbmap);
+	int B_index=buscarBloqueVacio(disco.dbmap);
 	if(B_index==-1)
 	{
 		printf("DISCO DURO LLENO\n");
 		return -1;
 	}
-	HDD.block[B_index].blk_no=B_index;
-	HDD.block[B_index].end=0;
-	HDD.block[B_index].i=&HDD.inode[inode_no];
+	disco.block[B_index].nodoBlk=B_index;
+	disco.block[B_index].end=0;
+	disco.block[B_index].i=&disco.inode[inode_no];
 	for(int i=0;i<BLKSIZE;i++)
-		HDD.block[B_index].blk[i]='\0';
+		disco.block[B_index].blk[i]='\0';
 	return B_index;
 }
 
 int hacerInodo(struct stat *s,file_type ftype)
 {
-	int I_index=buscarINodoVacio(HDD.ibmap);
+	int I_index=buscarINodoVacio(disco.ibmap);
 	if(I_index==-1)
 	{
 		printf("No hay INodos vacios\n");
 		return -1;
 	}
-	HDD.inode[I_index].ino=I_index;
-	HDD.inode[I_index].mode=s->st_mode;
-	HDD.inode[I_index].uid=s->st_uid;
-	HDD.inode[I_index].gid=s->st_gid;
-	HDD.inode[I_index].nlink=s->st_nlink;
-	HDD.inode[I_index].type=ftype;
-	HDD.inode[I_index].no_blocks=0;
-	HDD.inode[I_index].filesize=0;
+	disco.inode[I_index].inodo=I_index;
+	disco.inode[I_index].mode=s->st_mode;
+	disco.inode[I_index].uid=s->st_uid;
+	disco.inode[I_index].gid=s->st_gid;
+	disco.inode[I_index].nlink=s->st_nlink;
+	disco.inode[I_index].tipo=ftype;
+	disco.inode[I_index].no_blocks=0;
+	disco.inode[I_index].tamanioArchivo=0;
 	return I_index;
 }
 
 void limpiarInfoINodo(){
     for(int i = 0; i<NO_BLKS; i++){
         for(int j=0; j<BLK_LIMIT; j++){
-            HDD.inode[i].bp[j] = NULL;
+            disco.inode[i].bp[j] = NULL;
         }
     }
 }
 
 void llenarData(){
-    DISCODURO debug = HDD;
+    DISCODURO debug = disco;
     limpiarInfoINodo();
-    //HDD.inode[1].bp[0] = &HDD.block[0];
-    DISCODURO debug2 = HDD;
+    //disco.inode[1].bp[0] = &disco.block[0];
+    DISCODURO debug2 = disco;
     int initialBlock = 0;
     for(int i = 0; i<NO_BLKS; i++) {
-        if(HDD.inode[i].no_blocks == 0)
+        if(disco.inode[i].no_blocks == 0)
             continue;
 
-        int currentBlock = initialBlock + HDD.inode[i].no_blocks;
+        int currentBlock = initialBlock + disco.inode[i].no_blocks;
         int indexBlock = 0;
         for (initialBlock; initialBlock < currentBlock; initialBlock++) {
-            HDD.inode[i].bp[indexBlock] = &HDD.block[initialBlock];
+            disco.inode[i].bp[indexBlock] = &disco.block[initialBlock];
             indexBlock++;
             /*
-            if(!HDD.inode[i].bp[j]){
-                HDD.inode[i].bp[j] = &HDD.block[0];
+            if(!disco.inode[i].bp[j]){
+                disco.inode[i].bp[j] = &disco.block[0];
             }*/
         }
     }
-    DISCODURO debug3 = HDD;
+    DISCODURO debug3 = disco;
     /*
     for(int i = 0; i < 20; i++){
-        if((HDD.block[i].end)) {
+        if((disco.block[i].end)) {
             char test2[512];
-            strcpy(HDD.block[i].i->bp[i]->blk, HDD.block[i].blk);
+            strcpy(disco.block[i].i->bp[i]->blk, disco.block[i].blk);
         }
         else
             break;

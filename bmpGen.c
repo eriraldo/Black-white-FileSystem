@@ -5,27 +5,27 @@ extern char* folder;
 extern char* almacenamiento;
 extern DISCODURO HDD;
 void generarBMP(){
-    int asd = sizeof(DISCODURO);
+    //int asd = sizeof(DISCODURO);
 
-    int asd2 = _pixelbytesize;
+    //int asd2 = _pixelbytesize;
 
     FILE *fp = fopen(almacenamiento,"wb");
-    bitmap *pbitmap  = (bitmap*)calloc(1,sizeof(bitmap));
+    bitmap *mibitmap  = (bitmap*)calloc(1,sizeof(bitmap));
     uint8_t *pixelbuffer = (uint8_t*)malloc(sizeof(DISCODURO));
-    strcpy(pbitmap->fileheader.signature,"BM");
-    pbitmap->fileheader.filesize = _filesize;
-    pbitmap->fileheader.fileoffset_to_pixelarray = sizeof(bitmap);
-    pbitmap->bitmapinfoheader.dibheadersize =sizeof(bitmapinfoheader);
-    pbitmap->bitmapinfoheader.width = _width;
-    pbitmap->bitmapinfoheader.height = _height;
-    pbitmap->bitmapinfoheader.planes = _planes;
-    pbitmap->bitmapinfoheader.bitsperpixel = _bitsperpixel;
-    pbitmap->bitmapinfoheader.compression = _compression;
-    pbitmap->bitmapinfoheader.imagesize = _pixelbytesize;
-    pbitmap->bitmapinfoheader.ypixelpermeter = _ypixelpermeter ;
-    pbitmap->bitmapinfoheader.xpixelpermeter = _xpixelpermeter ;
-    pbitmap->bitmapinfoheader.numcolorspallette = 0;
-    fwrite (pbitmap, 1, sizeof(bitmap),fp);
+    strcpy(mibitmap->fileheader.signature,"BM");
+    mibitmap->fileheader.filesize = _filesize;
+    mibitmap->fileheader.fileoffset_to_pixelarray = sizeof(bitmap);
+    mibitmap->bitmapinfoheader.dibheadersize =sizeof(bitmapinfoheader);
+    mibitmap->bitmapinfoheader.width = _width;
+    mibitmap->bitmapinfoheader.height = _height;
+    mibitmap->bitmapinfoheader.planes = _planes;
+    mibitmap->bitmapinfoheader.bitsperpixel = _bitsperpixel;
+    mibitmap->bitmapinfoheader.compression = _compression;
+    mibitmap->bitmapinfoheader.imagesize = _pixelbytesize;
+    mibitmap->bitmapinfoheader.ypixelpermeter = _ypixelpermeter ;
+    mibitmap->bitmapinfoheader.xpixelpermeter = _xpixelpermeter ;
+    mibitmap->bitmapinfoheader.numcolorspallette = 0;
+    fwrite (mibitmap, 1, sizeof(bitmap),fp);
     memset(pixelbuffer,pixel,sizeof(DISCODURO));
     //fwrite(pixelbuffer,1,sizeof(DISCODURO),fp);
 
@@ -35,7 +35,7 @@ void generarBMP(){
 
     fwrite(&HDD,1,sizeof(DISCODURO),fp);
     fclose(fp);
-    free(pbitmap);
+    free(mibitmap);
     free(pixelbuffer);
 }
 

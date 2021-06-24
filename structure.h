@@ -22,53 +22,53 @@ typedef struct block BLOCK;
 typedef struct node
 {
 	char path_name[100];
-	int ino;
-	int parentno;
-	int nextno;
-	int headchildno;
-	int no_children;
+	int inodo;
+	int nodoPadre;
+	int signodo;
+	int cabezaNodoHijo;
+	int nodoHijo;
 }NODE;
 
 typedef struct inode
 {
-	int ino;
-	file_type type;
+	int inodo;
+	file_type tipo;
 	mode_t mode;
 	int nlink;
 	uid_t uid;
 	gid_t gid;
 	int no_blocks;
-	int filesize;
-	time_t last_modified_file;
-	time_t last_accessed_file;
-	time_t last_modified_inode;
+	int tamanioArchivo;
+	time_t ultimoArchivoModificado;
+	time_t ultimoArchivoAccesado;
+	time_t ultimoInodoModificado;
 	BLOCK *bp[BLK_LIMIT];
 }INODE;
 
 typedef struct block
 {
-  int blk_no;
+  int nodoBlk;
   char blk[BLKSIZE];
-  int end;
+  int fin;
   INODE *i;
 }BLOCK;
 
 typedef struct inode_bitmap
 {
   int inode_no;
-  int check;
+  int revisar;
 }IBMAP;
 
 typedef struct data_bitmap
 {
-  int blk_no;
-  int check;
+  int nodoBlk;
+  int revisar;
 }DBMAP;
 
 typedef struct node_bitmap
 {
 	int node_no;
-	int check;
+	int revisar;
 }NBMAP;
 
 //TREE FUNCTIONS
