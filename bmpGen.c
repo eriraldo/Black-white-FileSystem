@@ -3,7 +3,7 @@
 
 extern char* folder;
 extern char* almacenamiento;
-extern DISCODURO HDD;
+extern DISCODURO disco;
 void generarBMP(){
     //int asd = sizeof(DISCODURO);
 
@@ -33,7 +33,7 @@ void generarBMP(){
     fseek (fp, 0, SEEK_END);
     int size2 = ftell(fp);
 
-    fwrite(&HDD,1,sizeof(DISCODURO),fp);
+    fwrite(&disco,1,sizeof(DISCODURO),fp);
     fclose(fp);
     free(mibitmap);
     free(pixelbuffer);

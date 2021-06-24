@@ -268,7 +268,7 @@ int hacerBloque(int inode_no)
 		return -1;
 	}
 	disco.block[B_index].nodoBlk=B_index;
-	disco.block[B_index].end=0;
+	disco.block[B_index].fin=0;
 	disco.block[B_index].i=&disco.inode[inode_no];
 	for(int i=0;i<BLKSIZE;i++)
 		disco.block[B_index].blk[i]='\0';
@@ -326,7 +326,7 @@ void llenarData(){
     DISCODURO debug3 = disco;
     /*
     for(int i = 0; i < 20; i++){
-        if((disco.block[i].end)) {
+        if((disco.block[i].fin)) {
             char test2[512];
             strcpy(disco.block[i].i->bp[i]->blk, disco.block[i].blk);
         }
