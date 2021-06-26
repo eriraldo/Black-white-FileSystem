@@ -345,135 +345,6 @@ static int do_flush(const char *ruta, struct fuse_file_info *fi){
     return 0;
 };
 
-void log_msg(const char *format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    FILE *fp;
-    fp = fopen("bwfs/reportMessage.txt","w");
-    vfprintf(fp, format, ap);
-    fclose(fp);
-
-}
-int log_error(char *func)
-{
-    int ret = -errno;
-
-    log_msg("    ERROR %s: %s\n", func, strerror(errno));
-
-    return ret;
-}
-void log_retstat(char *func, int retstat)
-{
-    int errsave = errno;
-    log_msg("    %s returned %d\n", func, retstat);
-    errno = errsave;
-}
-
-// make a system call, checking (and reporting) return status and
-// possibly logging error
-int log_syscall(char *func, int retstat, int min_ret)
-{
-    log_retstat(func, retstat);
-
-    if (retstat < min_ret) {
-        log_error(func);
-        retstat = -errno;
-    }
-
-    return retstat;
-}
-/*
-static void bb_fullpath(char fpath[PATH_MAX], const char *ruta)
-{
-    strcpy(fpath, BB_DATA->rootdir);
-    strncat(fpath, ruta, PATH_MAX); // ridiculously long paths will
-    // break here
-
-    log_msg("    bb_fullpath:  rootdir = \"%s\", ruta = \"%s\", fpath = \"%s\"\n",
-            BB_DATA->rootdir, ruta, fpath);
-}
-int do_statfs(const char *ruta, struct statvfs *statv)
-{
-    int retstat = 0;
-    char fpath[PATH_MAX];
-
-    log_msg("\nbb_statfs(ruta=\"%s\", statv=0x%08x)\n",
-            ruta, statv);
-    bb_fullpath(fpath, ruta);
-    // get stats for underlying filesystem
-    retstat = log_syscall("statvfs", statvfs(fpath, statv), 0);
-    log_statvfs(statv);
-    return retstat;
-}
-
-*/
-void log_fi (struct fuse_file_info *fi)
-{
-    log_msg("    fi:\n");
-
-    /** Open flags.  Available in open() and release() */
-    //	int flags;
-    log_struct(fi, flags, 0x%08x, );
-
-    /** Old file handle, don't use */
-    //	unsigned long fh_old;
-    log_struct(fi, fh_old, 0x%08lx,  );
-
-    /** In case of a write operation indicates if this was caused by a
-        writepage */
-    //	int writepage;
-    log_struct(fi, writepage, %d, );
-
-    /** Can be filled in by open, to use direct I/O on this file.
-        Introduced in version 2.4 */
-    //	unsigned int keep_cache : 1;
-    log_struct(fi, direct_io, %d, );
-
-    /** Can be filled in by open, to indicate, that cached file data
-        need not be invalidated.  Introduced in version 2.4 */
-    //	unsigned int flush : 1;
-    log_struct(fi, keep_cache, %d, );
-
-    /** Padding.  Do not use*/
-    //	unsigned int padding : 29;
-
-    /** File handle.  May be filled in by filesystem in open().
-        Available in all other file operations */
-    //	uint64_t fh;
-    log_struct(fi, fh, 0x%016llx,  );
-
-    /** Lock owner id.  Available in locking operations and flush */
-    //  uint64_t lock_owner;
-    log_struct(fi, lock_owner, 0x%016llx, );
-}
-
-int do_opendir(const char *ruta, struct fuse_file_info *fi) //CREO QUE YA FUNCIONA, FALTA REVISAR
-{
-    DIR *dp;
-    int retstat = 0;
-    log_msg("\ndo_opendir(ruta=\"%s\", fi=0x%08x)\n",
-            ruta, fi);
-    int temp = buscarNodo(ruta,disco.t.rootno);
-
-    if(temp==-1)
-        return -ENOENT;
-    else {
-        dp = opendir(ruta);
-        //return 0;
-    }
-    // since opendir returns a pointer, takes some custom handling of
-    // return status.
-    log_msg("    opendir retornó 0x%p\n", dp);
-    if (dp == NULL)
-        retstat = log_error("do_opendir opendir");
-
-    fi->fh = (intptr_t) dp;
-
-    log_fi(fi);
-
-    return retstat;
-}
 
 static struct fuse_operations operations = {
     .getattr = do_getattr,
@@ -489,7 +360,7 @@ static struct fuse_operations operations = {
     .open = do_open,
     .rename = do_rename,
     .flush = do_flush,
-    .opendir = do_opendir,
+
 };
 
 
