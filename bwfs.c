@@ -8,16 +8,18 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include "structure.h"
 #include "bmpGen.h"
-#include <stdarg.h>
-#include <linux/limits.h>
-#include <dirent.h>
+#define MODO 1
+#define FILESIZE 100
+#define FOLDER 2
+#define MOUNTPOINT 3
 
 char* folder;
 char* almacenamiento;
 extern DISCODURO disco;
+
+//La función do_geattr lo que hace es traer la informacion de la ruta almacena en el arbol con sus  sus atributos
 static int do_getattr(const char *ruta,struct stat *s)
 {
 	printf( "[getattr] Llamado\n" );
@@ -31,14 +33,14 @@ static int do_getattr(const char *ruta,struct stat *s)
 		{
 			int a=hacerInodo(s,TYPE_DIRECTORY);
 			disco.node[disco.t.rootno].inodo=a;
-			s->st_ino=a;
+			s->st_ino=a; // numero de inodo
 		}
-		s->st_gid=getgid();
-		s->st_uid=getuid();
-		s->st_atime=s->st_mtime=time(NULL);
-		s->st_mode=S_IFDIR | 0755;
-		s->st_nlink=1;
-		s->st_blocks=s->st_blksize=s->st_size=0;
+		s->st_gid=getgid();// ID del grupo del dueño
+		s->st_uid=getuid(); //ID del usuario del dueño
+		s->st_atime=s->st_mtime=time(NULL); // hora o tiempo del ultimo acceso y modificación
+		s->st_mode=S_IFDIR | 0755; // Tipo de archivo y modo
+		s->st_nlink=1; // numero de link
+		s->st_blocks=s->st_blksize=s->st_size=0;// tamaño  del bloque
 		return 0;
 	}
 	else if(strcmp(ruta,"/.Trash")!=0 && strcmp(ruta,"/.Trash-1000")!=0 && strcmp(ruta,"/.xdg-volume-info")!=0 && strcmp(ruta,"/autorun.inf")!=0)
@@ -61,7 +63,7 @@ static int do_getattr(const char *ruta,struct stat *s)
 		return 0;
 	}
 }
-
+//Lo que hace el do_write es escribir en un archivo un string especificado
 static int do_write(const char *ruta, const char *buffer, size_t size, off_t offset,struct fuse_file_info *f)
 {
     printf( "--> Intentando de escribir %s, %lu, %lu\n", ruta, offset, size );
@@ -74,13 +76,13 @@ static int do_write(const char *ruta, const char *buffer, size_t size, off_t off
         return -ENOENT;
     }
 
-    int last = (disco.inode[disco.node[temp].inodo].bp[disco.inode[disco.node[temp].inodo].no_blocks-1])->fin;
-    int rem_space=BLKSIZE-last;
+    int last = (disco.inode[disco.node[temp].inodo].bp[disco.inode[disco.node[temp].inodo].no_blocks-1])->fin;// se utiliza para obtener el fin de un bloque
+    int rem_space=BLKSIZE-last; // se obtiene el tamaño restante
     int tempsize=size;
     int written=0;
 
     char text1[size];
-    while(rem_space<tempsize)
+    while(rem_space<tempsize) //si no hay mas espacio en el bloque actual, se crea un bloque mas para poder escribir
     {
         int size1=rem_space;
         tempsize=tempsize-size1;
@@ -114,34 +116,34 @@ static int do_write(const char *ruta, const char *buffer, size_t size, off_t off
 
     (disco.inode[disco.node[temp].inodo].bp[disco.inode[disco.node[temp].inodo].no_blocks-1])->fin += size1;
 
-
-    //printf("%s\n",buffer );
     disco.inode[disco.node[temp].inodo].tamanioArchivo+=size;
-    DISCODURO debug = disco;
-    return size;
+
+    return size;//se retorna el tamaño de lo que se va a escribir
 }
 
+
+// Se intenta de leer la información que contiene un archivo especificado por su ruta
 static int do_read(const char *ruta, char *buffer, size_t size,off_t offset, struct fuse_file_info *fi)
 {
     size_t size2 = size;
     printf( "--> Intentado de leer %s, %lu, %lu\n", ruta, offset, size );
-    DISCODURO debug = disco;
-    int temp = buscarNodo(ruta,disco.t.rootno);
+
+    int temp = buscarNodo(ruta,disco.t.rootno);// se busca el archivo en el arbol
 
     if(temp == -1)
     {
         printf("RUTA INVALIDA\n");
         return -ENOENT;
     }
-    size_t size1=disco.inode[disco.node[temp].inodo].tamanioArchivo;
+    size_t size1=disco.inode[disco.node[temp].inodo].tamanioArchivo; // se saca el tamaño del archivo
 
-    int number_blocks=disco.inode[disco.node[temp].inodo].no_blocks-1, j;
+    int number_blocks=disco.inode[disco.node[temp].inodo].no_blocks-1, j;// se obtiene la cantidad de bloques que posee el archivo
     char text [sizeof(DISCODURO)];
     for(j=0;j<=number_blocks;j++)
     {
         strncat(text, (disco.inode[disco.node[temp].inodo].bp[j])->blk ,(disco.inode[disco.node[temp].inodo].bp[j])->fin);
     }
-    //strcpy(text,cat);
+
     char* text2 = text;
     if(offset < size1){
         if(offset + size > size1){
@@ -157,48 +159,11 @@ static int do_read(const char *ruta, char *buffer, size_t size,off_t offset, str
 
     return size;
 }
-/*
-void printFile(){
 
-    FILE *ptr;
-
-    ptr = fopen(folder,"rb");  // r for read, b for binary
-    fseek (ptr, 0, SEEK_END);
-    int size = ftell(ptr);
-    unsigned char buffer[size];
-    fread(buffer,sizeof(buffer),1,ptr); // read 10 bytes to our buffer
-
-    printf("IMPRIMIENDO: %d  BYTES\n", size);
-    bool test = false;
-    for(int i = 0; i<size; i++)
-        if(i!=0 && i%30 == 0) {
-            printf("\n");
-        }else{
-            printf("%u ", buffer[i]); // prints a series of bytes
-            test = !test;
-
-        }
-
-
-
-}
-
-void test(){
-    FILE *ptr;
-    ptr = fopen(folder,"rb");  // r for read, b for binary
-    fseek (ptr, 0, SEEK_END);
-    int size = ftell(ptr);
-    ptr = fopen(folder,"rb");  // r for read, b for binary
-    FILE *fp;
-    fp = fopen("bwfs/test.bmp","ab+");
-    fwrite(ptr, size, 1, fp);
-    fclose(fp);
-    fclose(ptr);
-}
-*/
+//Se toma una lista de archivos de la ruta que se especifique, en este caso, un directorio.
 static int do_readdir(const char *ruta,void *buffer, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *f)
 {
-    DISCODURO debug32 = disco;
+
 	printf( "--> Tomando la lista de archivos de la ruta %s\n", ruta ); //
 
 	filler( buffer, ".", NULL, 0 );
@@ -216,21 +181,21 @@ static int do_readdir(const char *ruta,void *buffer, fuse_fill_dir_t filler, off
 	{
 		int i=0;
 		int ptr=disco.node[temp].cabezaNodoHijo;
-		while(ptr!=-1)
+		while(ptr!=-1)//se van sacando cada una de las rutas y se dejan limpias para mostrar nada mas la lista de archivos
 		{
 			char *d,*name;
 			d=(char*)calloc(strlen(ruta)+1,sizeof(char));
 			name=(char*)calloc(strlen(ruta)+1,sizeof(char));
-			parsearRuta(disco.node[ptr].path_name,d,name);
+			parsearRuta(disco.node[ptr].path_name,d,name);// se saca el nombre de la ruta
 			filler( buffer, name, NULL, 0 );
-			ptr=disco.node[ptr].signodo;
+			ptr=disco.node[ptr].signodo;//se busca el siguiente nodo para encontrar la siguiente ruta
 		}
 	}
 	return 0;
 }
 
 
-
+// El create intenta crear una ruta nueva
 static int do_create (const char *ruta, mode_t mode, struct fuse_file_info *f)
 {
 	printf( "--> Intentando de crear %s\n", ruta);
@@ -245,6 +210,7 @@ static int do_create (const char *ruta, mode_t mode, struct fuse_file_info *f)
 	return 0;
 }
 
+// El mknod intenta de usar el editor de texto
 static int do_mknod (const char *ruta, mode_t mode, dev_t dev)
 {
 	printf( "--> Intentando de crear  %s\n", ruta);
@@ -259,18 +225,19 @@ static int do_mknod (const char *ruta, mode_t mode, dev_t dev)
 	return 0;
 }
 
+// Lo que hace esta función es intentar de desligar un archivo para eliminarlo
 static int do_unlink(const char *ruta)
 {
 	printf( "--> Intentando de desligar  %s\n", ruta);
 
-	int ans=eliminarNodo(ruta,disco.t.rootno);
+	int ans=eliminarNodo(ruta,disco.t.rootno);//se busca el nodo del arbol y se elimina
 	if(ans==0)
 	{
 		return -ENOTEMPTY;
 	}
 	return 0;
 }
-
+// El mkdir se encarga de crear un directorio nuevo si el mismo todavía no existe
 static int do_mkdir(const char *ruta, mode_t mode)
 {
     printf( "--> Intentado de crear el directorio %s\n", ruta);
@@ -286,6 +253,8 @@ static int do_mkdir(const char *ruta, mode_t mode)
 
     return 0;
 }
+
+//El rmdir se encarga de remover un directorio del arbol
 static int do_rmdir(const char * ruta)
 {
     printf( "--> Intentando de remover el directorio %s\n", ruta);
@@ -298,23 +267,7 @@ static int do_rmdir(const char * ruta)
     return 0;
 }
 
-
-
-static int do_chmod(const char *ruta, mode_t mode)
-{
-	printf( "--> Intentando de cambiar permisos %s\n", ruta); //
-
-	int temp = buscarNodo(ruta,disco.t.rootno);
-
-	if(temp == -1)
-	{
-		printf("RUTA INVALIDA\n");
-		return -ENOENT;
-	}
-	disco.inode[disco.node[temp].inodo].mode=mode;
-	return 0;
-}
-
+//El do_open se encarga de abrir archivos
 static int do_open(const char *ruta, struct fuse_file_info *fi)
 {
 	printf( "--> Intentando de abrir %s\n", ruta);
@@ -327,6 +280,9 @@ static int do_open(const char *ruta, struct fuse_file_info *fi)
 		return 0;
 };
 
+
+
+//El do_rename se encarga de cambiar el nombre de un archivo
 static int do_rename(const char *from, const char *to){
     int temp = buscarNodo(from,disco.t.rootno);
 
@@ -340,26 +296,39 @@ static int do_rename(const char *from, const char *to){
     return 0;
 };
 
+//Lo que hace es generar el BMP
 static int do_flush(const char *ruta, struct fuse_file_info *fi){
     generarBMP();
     return 0;
 };
 
+//El do_opendir se encarga de abrir directorios
+static int do_opendir(const char *ruta, struct fuse_file_info *fi)
+{
+    printf( "--> Intentando de abrir %s\n", ruta);
+
+    int temp = buscarNodo(ruta,disco.t.rootno);
+
+    if(temp==-1)
+        return -ENOENT;
+    else if(strcmp(ruta,"/")!=0)
+        return 0;
+};
 
 static struct fuse_operations operations = {
     .getattr = do_getattr,
-    .readdir = do_readdir,	//ls function
-    .mkdir = do_mkdir,		//MAKING DIRECTORY
-    .create = do_create,	//USING TOUCH
-    .mknod = do_mknod,		//USING TEXT EDITOR
-    .rmdir = do_rmdir,		//REMOVING DIRECTORY
-    .unlink = do_unlink,	//REMOVING FILE
-    .read = do_read,		//READING FILE
-    .write = do_write,		//WRITING FILE
-    .chmod = do_chmod,		//CHANGING PERMISSION
+    .readdir = do_readdir,
+    .mkdir = do_mkdir,
+    .create = do_create,
+    .mknod = do_mknod,
+    .rmdir = do_rmdir,
+    .unlink = do_unlink,
+    .read = do_read,
+    .write = do_write,
     .open = do_open,
     .rename = do_rename,
     .flush = do_flush,
+    .opendir = do_opendir,
 
 };
 
@@ -374,59 +343,49 @@ static struct fuse_operations operations = {
 
 int main( int argc, char *argv[] )
 {
-    char* newArgv[3] = {argv[0], "-f", ""};
-    char mountpoint[100] ={""};
-    if(argc > 3) {
-        strcpy(mountpoint,argv[3]);
-        newArgv[2] = mountpoint;
-    }
-    char* modo = argv[1];
-    char parseFolder[100] = {""};
-    strcpy(parseFolder,argv[2]);
-    char parseBMP[100] = {""};
-    strcpy(parseBMP,argv[2]);
-    folder = parseFolder;
+
+    char* modo = argv[MODO];// se utiliza para saber el modo que se quiere utilizar
+
+
+    char parseBMP[FILESIZE] = {""};
+    strcpy(parseBMP,argv[FOLDER]);
     almacenamiento = parseBMP;
     struct stat st = {0};
-    if(stat(folder, &st ) == -1){
-        mkdir(folder, 0700);
+    if(stat(argv[FOLDER], &st ) == -1){// se usa para verificar si existe el folder donde se va a almacenar el filesystem
+        mkdir(argv[FOLDER], 0700);//se crea la carpeta
     }
     char* archivoBMP = "almacenamiento.bmp";
     strcat(almacenamiento,archivoBMP);
     FILE *fp;
     int size = 0;
-    if(strcmp(modo, "mount") == 0){
+    if(strcmp(modo, "mount") == 0){//se verifica si se quiere hacer un "mount"
         struct stat st2 = {0};
         fp=fopen(almacenamiento,"rb");
-        if(fp == NULL){
-            fp = fopen(almacenamiento,"wb");
+
+        if(stat(argv[MOUNTPOINT], &st2) == -1){
+            mkdir(argv[MOUNTPOINT], 0700);
         }
-        fseek (fp, 0, SEEK_END);
-        size = ftell(fp);
-        if(stat(argv[3], &st2) == -1){
-            mkdir(argv[3], 0700);
-        }
-        if(size==0){
+        if(fp== NULL){
             iniciarDataBmap(disco.dbmap);
             iniciarINodoBmap(disco.ibmap);
             iniciarNodoBmap(disco.nbmap);
             crearArbol();
+            generarBMP();
             printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
             printf("\tSISTEMA DE ARCHIVOS MONTADO\n");
         }
         else{
-            fseek (fp, headerSize, SEEK_SET);
+            fseek (fp, headerSize, SEEK_SET);//se define que el inicio del archivo es despues del encabezado (header)
             while(fread(&disco, sizeof(DISCODURO), 1, fp));
-            DISCODURO debug32 = disco;
             printf("\n\n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n" );
             printf("\tSISTEMA DE ARCHIVOS MONTADO NUEVAMENTE\n");
 
             llenarData();
-
+            fclose(fp);
         }
-        argv[1] = "-f";
-        argv[2] = "-s";
-        fclose(fp);
+        argv[MODO] = "-f";//se usa para mostrar los prints
+        argv[FOLDER] = "-s";//se utiliza para tener un solo hilo
+
 
     }else if(strcmp(modo, "create") == 0){
         iniciarDataBmap(disco.dbmap);

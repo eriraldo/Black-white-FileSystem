@@ -15,12 +15,12 @@ void imprimirArbol(int rootno)
 		ptr=disco.node[ptr].signodo;
 	}
 }
-
+// se crea el árbol con el nodo raíz
 void crearArbol()
 {
 	disco.t.rootno=crearRaiz();
 }
-
+//se crea la raíz del árbol
 int crearRaiz()
 {
 	int index=buscarNodoVacio(disco.nbmap);
@@ -36,7 +36,7 @@ int crearRaiz()
 	disco.node[index].nodoHijo=0;
 	return index;
 }
-
+// se busca el nodo según la ruta y el número de nodo
 int buscarNodo(const char *ruta,int rootno)
 {
 	if(rootno==-1)
@@ -57,7 +57,7 @@ int buscarNodo(const char *ruta,int rootno)
 
 	}
 }
-
+//se crea un nodo nuevo
 int hacerNodo(const char *ruta,int rootno,struct stat *s,file_type ftype)
 {
 	int inode_no=hacerInodo(s,ftype);
@@ -65,19 +65,19 @@ int hacerNodo(const char *ruta,int rootno,struct stat *s,file_type ftype)
 	{
 		return -1;
 	}
-	else if(buscarNodo(ruta,rootno)!=-1)
+	else if(buscarNodo(ruta,rootno)!=-1)// si el nodo ya existe no se puede crear
 	{
 		printf("El archivo ya existe\n");
 		return -1;
 	}
 	else
 	{
-		int index=buscarNodoVacio(disco.nbmap);
+		int index=buscarNodoVacio(disco.nbmap);//se busca un nodo vacio para poder generar el nuevo
 		int j;
 		char *d,*name;
 		d=(char*)calloc(strlen(ruta),sizeof(char));
 		name=(char*)calloc(strlen(ruta),sizeof(char));
-		parsearRuta(ruta,d,name);
+		parsearRuta(ruta,d,name);//se parsea la ruta para que solo contenga el nombre de la ruta especifica
 
 		int par=buscarNodo(d,rootno);
 
@@ -130,11 +130,11 @@ int hacerNodo(const char *ruta,int rootno,struct stat *s,file_type ftype)
 		return index;
 	}
 }
-
+//se busca un nodo para poder eliminarlo
 int eliminarNodo(const char *ruta,int rootno)
 {
 	int rn=buscarNodo(ruta,rootno);
-	if(rn==-1)
+	if(rn==-1) // si el nodo no existe no lo puede encontrar
 	{
 		printf("ARCHIVO NO ENCONTRADO\n");
 		return 0;
@@ -178,6 +178,7 @@ int eliminarNodo(const char *ruta,int rootno)
 		return 1;
 	}
 }
+//se encarga de buscar el nombre de la ruta para que quede mas pequeña
 void parsearRuta(const char* ruta,char *directory,char *name)
 {
    int length=strlen(ruta);
@@ -259,10 +260,11 @@ int buscarBloqueVacio(DBMAP *dbp)
 	return -1;
 }
 
+//se genera un nuevo bloque de memoria
 int hacerBloque(int inode_no)
 {
 	int B_index=buscarBloqueVacio(disco.dbmap);
-	if(B_index==-1)
+	if(B_index==-1)// si no hay un bloque vacio significa que el disco duro está lleno
 	{
 		printf("DISCO DURO LLENO\n");
 		return -1;
@@ -275,10 +277,11 @@ int hacerBloque(int inode_no)
 	return B_index;
 }
 
+//Se encarga de crear un Inodo nuevo
 int hacerInodo(struct stat *s,file_type ftype)
 {
 	int I_index=buscarINodoVacio(disco.ibmap);
-	if(I_index==-1)
+	if(I_index==-1)// si no existen Inodos desocupados no puede crear uno nuevo
 	{
 		printf("No hay INodos vacios\n");
 		return -1;
@@ -293,7 +296,7 @@ int hacerInodo(struct stat *s,file_type ftype)
 	disco.inode[I_index].tamanioArchivo=0;
 	return I_index;
 }
-
+//Se limpia la información de un Inodo
 void limpiarInfoINodo(){
     for(int i = 0; i<NO_BLKS; i++){
         for(int j=0; j<BLK_LIMIT; j++){
@@ -302,11 +305,10 @@ void limpiarInfoINodo(){
     }
 }
 
+//Dado que el fwrite no almacena información de punteros, se crea este método para hacerlo manualmente
 void llenarData(){
-    DISCODURO debug = disco;
+
     limpiarInfoINodo();
-    //disco.inode[1].bp[0] = &disco.block[0];
-    DISCODURO debug2 = disco;
     int initialBlock = 0;
     for(int i = 0; i<NO_BLKS; i++) {
         if(disco.inode[i].no_blocks == 0)
@@ -314,23 +316,9 @@ void llenarData(){
 
         int currentBlock = initialBlock + disco.inode[i].no_blocks;
         int indexBlock = 0;
-        for (initialBlock; initialBlock < currentBlock; initialBlock++) {
+        for (initialBlock; initialBlock < currentBlock; initialBlock++) {//se pasan los datos de los bloques al inodo
             disco.inode[i].bp[indexBlock] = &disco.block[initialBlock];
             indexBlock++;
-            /*
-            if(!disco.inode[i].bp[j]){
-                disco.inode[i].bp[j] = &disco.block[0];
-            }*/
         }
     }
-    DISCODURO debug3 = disco;
-    /*
-    for(int i = 0; i < 20; i++){
-        if((disco.block[i].fin)) {
-            char test2[512];
-            strcpy(disco.block[i].i->bp[i]->blk, disco.block[i].blk);
-        }
-        else
-            break;
-    }*/
 }

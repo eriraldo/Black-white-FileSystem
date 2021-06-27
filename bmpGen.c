@@ -4,11 +4,9 @@
 extern char* folder;
 extern char* almacenamiento;
 extern DISCODURO disco;
+
 void generarBMP(){
-    //int asd = sizeof(DISCODURO);
-
-    //int asd2 = _pixelbytesize;
-
+    //informacion del header del BMP
     FILE *fp = fopen(almacenamiento,"wb");
     bitmap *mibitmap  = (bitmap*)calloc(1,sizeof(bitmap));
     uint8_t *pixelbuffer = (uint8_t*)malloc(sizeof(DISCODURO));
@@ -25,33 +23,12 @@ void generarBMP(){
     mibitmap->bitmapinfoheader.ypixelpermeter = _ypixelpermeter ;
     mibitmap->bitmapinfoheader.xpixelpermeter = _xpixelpermeter ;
     mibitmap->bitmapinfoheader.numcolorspallette = 0;
-    fwrite (mibitmap, 1, sizeof(bitmap),fp);
+    fwrite (mibitmap, 1, sizeof(bitmap),fp);//se escribe el header del archivo
     memset(pixelbuffer,pixel,sizeof(DISCODURO));
-    //fwrite(pixelbuffer,1,sizeof(DISCODURO),fp);
-
-    fseek (fp, headerSize, SEEK_SET);
+    fseek (fp, headerSize, SEEK_SET);// Se salta el header para definir el inicio del archivo
     fseek (fp, 0, SEEK_END);
-    int size2 = ftell(fp);
-
-    fwrite(&disco,1,sizeof(DISCODURO),fp);
+    fwrite(&disco,1,sizeof(DISCODURO),fp);//se escriben los datos de la estructura al archivo
     fclose(fp);
     free(mibitmap);
     free(pixelbuffer);
-}
-
-void readBMP(){
-    int asd = sizeof(DISCODURO);
-    FILE *fp = fopen(almacenamiento,"rb");
-    fseek (fp, 0, SEEK_END);
-    fseek (fp, headerSize, SEEK_SET);
-    FILE *fpTest = fopen("test.dat", "wb");
-    unsigned char buffer[sizeof(DISCODURO)];
-    fread(buffer,sizeof(buffer),1,fp);
-    fseek (fpTest, 0, SEEK_END);
-    fwrite(buffer,sizeof(buffer),1,fpTest);
-    /*
-    fseek (fpTest, 0, SEEK_SET);
-    fread(fpTest,size,1,fp);*/
-    fclose(fp);
-    fclose(fpTest);
 }
